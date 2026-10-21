@@ -48,7 +48,7 @@ function Auth() {
       <div className="my-6 text-center text-xs text-muted-foreground">или продолжить с</div>
       <div className="grid grid-cols-3 gap-3">
         {(["google", "apple", "github"] as const).map((p) => (
-          <button key={p} onClick={() => oauth(p)} className="rounded-[20px] bg-card py-3 text-sm capitalize">{p === "github" ? "GitHub" : p[0].toUpperCase() + p.slice(1)}</button>
+          <button key={p} onClick={() => oauth(p)} className="rounded-[20px] bg-card py-3 text-sm capitalize">{p === "github" ? "GitHub" : p.charAt(0).toUpperCase() + p.slice(1)}</button>
         ))}
       </div>
       <button onClick={() => setMode(mode === "up" ? "in" : "up")} className="mt-8 w-full text-sm text-muted-foreground">

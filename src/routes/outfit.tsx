@@ -31,7 +31,7 @@ function Outfit() {
       <ul className="space-y-3">
         {parts.map(([n, b]) => (
           <li key={n} className="flex items-center justify-between rounded-[20px] bg-card px-5 py-4">
-            <span>{n}</span><span className="text-xs tracking-widest text-muted-foreground">{b.toUpperCase()}</span>
+            <span>{n}</span><span className="text-xs tracking-widest text-muted-foreground">{b?.toUpperCase()}</span>
           </li>
         ))}
       </ul>
