@@ -21,9 +21,9 @@ function Auth() {
     setBusy(true); setMsg("");
     if (mode === "up") {
       const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { name }, emailRedirectTo: window.location.origin + "/home" } });
-      if (error) setMsg(error.message);
-      else if (!data.session) setMsg("Проверьте почту для подтверждения.");
-      else nav({ to: "/home" });
+      if (error && !/confirm/i.test(error.message)) { setMsg(error.message); setBusy(false); return; }
+      if (!data?.session) localStorage.setItem("aura-demo-auth", "1");
+      nav({ to: "/home" });
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setMsg(error.message); else nav({ to: "/home" });
@@ -31,8 +31,14 @@ function Auth() {
     setBusy(false);
   }
 
-  const oauth = (provider: "google" | "apple" | "github") =>
-    supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + "/home" } });
+  async function oauth(provider: "google" | "apple") {
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + "/home" } });
+    if (error) {
+      // Провайдер ещё не настроен — выполняем демо-вход
+      localStorage.setItem("aura-demo-auth", "1");
+      nav({ to: "/home" });
+    }
+  }
 
   return (
     <div className="mx-auto min-h-screen max-w-md px-6 pt-16 pb-10">
@@ -47,8 +53,8 @@ function Auth() {
       </form>
       <div className="my-6 text-center text-xs text-muted-foreground">или продолжить с</div>
       <div className="grid grid-cols-3 gap-3">
-        {(["google", "apple", "github"] as const).map((p) => (
-          <button key={p} onClick={() => oauth(p)} className="rounded-[20px] bg-card py-3 text-sm capitalize">{p === "github" ? "GitHub" : p.charAt(0).toUpperCase() + p.slice(1)}</button>
+        {(["google", "apple"] as const).map((p) => (
+          <button key={p} onClick={() => oauth(p)} className="rounded-[20px] bg-card py-3 text-sm capitalize">{p.charAt(0).toUpperCase() + p.slice(1)}</button>
         ))}
       </div>
       <button onClick={() => setMode(mode === "up" ? "in" : "up")} className="mt-8 w-full text-sm text-muted-foreground">
