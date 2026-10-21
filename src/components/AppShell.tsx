@@ -35,7 +35,7 @@ function BottomNav() {
   );
 }
 
-export function Chip({ active, children, onClick }: { active?: boolean; children: ReactNode; onClick?: () => void }) {
+export function Chip({ active, children, onClick }: { active?: boolean | undefined; children: ReactNode; onClick?: (() => void) | undefined }) {
   return (
     <button
       type="button"
@@ -47,14 +47,14 @@ export function Chip({ active, children, onClick }: { active?: boolean; children
   );
 }
 
-export function ItemTile({ name, brand, color, image, selected, onClick }: { name: string; brand?: string | null; color?: string | null; image?: string | null; selected?: boolean; onClick?: () => void }) {
+export function ItemTile({ name, brand, color, image, selected, onClick }: { name: string; brand?: string | null | undefined; color?: string | null | undefined; image?: string | null | undefined; selected?: boolean; onClick?: () => void }) {
   return (
     <button type="button" onClick={onClick} className={`overflow-hidden rounded-[20px] bg-card text-left transition ${selected ? "ring-2 ring-primary" : ""}`}>
       <div className="flex aspect-square items-center justify-center bg-secondary">
         {image ? (
           <img src={image} alt={name} className="h-full w-full object-cover" loading="lazy" />
         ) : (
-          <div className="h-16 w-16 rounded-full border border-border" style={{ background: color ?? undefined }} />
+          <div className="h-16 w-16 rounded-full border border-border" style={color ? { background: color } : {}} />
         )}
       </div>
       <div className="p-3">
