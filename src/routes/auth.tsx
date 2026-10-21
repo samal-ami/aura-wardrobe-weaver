@@ -21,7 +21,7 @@ function Auth() {
     setBusy(true); setMsg("");
     if (mode === "up") {
       const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { name }, emailRedirectTo: window.location.origin + "/home" } });
-      if (error && !/confirm/i.test(error.message)) { setMsg(error.message); setBusy(false); return; }
+      if (error && !/confirm|email|rate limit/i.test(error.message)) { setMsg(error.message); setBusy(false); return; }
       if (!data?.session) localStorage.setItem("aura-demo-auth", "1");
       nav({ to: "/home" });
     } else {
