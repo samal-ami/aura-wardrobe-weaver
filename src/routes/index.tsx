@@ -1,24 +1,28 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import welcome from "@/assets/welcome.jpg";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "AURA — Добро пожаловать" },
+      { name: "description", content: "Собирай образы из своего гардероба вместе с AURA." },
+      { property: "og:title", content: "AURA — Добро пожаловать" },
+      { property: "og:description", content: "Собирай образы из своего гардероба вместе с AURA." },
+    ],
+  }),
+  component: Welcome,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Welcome() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="relative mx-auto flex min-h-screen max-w-md flex-col overflow-hidden bg-background">
+      <img src={welcome} alt="AURA" width={768} height={1344} className="absolute inset-0 h-full w-full object-cover" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+      <div className="relative mt-auto px-8 pb-14 text-center">
+        <h1 className="font-serif text-7xl tracking-[0.2em] text-foreground">AURA</h1>
+        <p className="mt-3 text-muted-foreground">Твой стиль. Твой гардероб.</p>
+        <Link to="/auth" className="btn-primary mt-10 block">Начать</Link>
+      </div>
     </div>
   );
 }
