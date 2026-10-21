@@ -45,7 +45,9 @@ function Auth() {
     // Проверяем, настроен ли провайдер, через открытый endpoint настроек
     let enabled = false;
     try {
-      const res = await fetch("https://kjkfqovwsppbgahzgkgx.supabase.co/auth/v1/settings");
+      const res = await fetch("https://kjkfqovwsppbgahzgkgx.supabase.co/auth/v1/settings", {
+        headers: { apikey: "sb_publishable__dGeuURiWQfd-SYDSljwPw_AIpAT3z9" },
+      });
       const settings = await res.json();
       enabled = Boolean(settings?.external?.[provider]);
     } catch { /* сеть недоступна — считаем, что не настроен */ }
