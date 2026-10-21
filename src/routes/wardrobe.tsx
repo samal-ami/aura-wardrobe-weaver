@@ -27,7 +27,7 @@ function Wardrobe() {
         {TAGS.map((t) => <Chip key={t} active={t === tag} onClick={() => setTag(t)}>{t}</Chip>)}
       </div>
       <div className="mt-5 grid grid-cols-2 gap-4">
-        {list.map((i) => <ItemTile key={i.id} name={i.name} brand={i.brand} color={i.color} image={i.image_url} />)}
+        {list.map((i) => <ItemTile key={i.id} name={i.name} brand={i.brand} color={i.color_hex ?? i.color} image={i.image_url} />)}
       </div>
       {list.length === 0 && <p className="mt-10 text-center text-muted-foreground">Ничего не найдено</p>}
     </AppShell>

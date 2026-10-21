@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { AppShell, ItemTile } from "@/components/AppShell";
 import { fetchItems, supabase, type ClothingItem } from "@/lib/supabase";
 
@@ -22,19 +23,19 @@ function CreateOutfit() {
     const { data: u } = await supabase.auth.getUser();
     const { error } = await supabase.from("outfits").insert({ name: name || "Новый образ", item_ids: sel, ...(u.user ? { user_id: u.user.id } : {}) });
     setMsg(error ? "Ошибка: " + error.message : "Образ сохранён ✓");
-    if (!error) setSel([]);
+    if (!error) { setSel([]); toast.success("Успешно сохранено!"); } else toast.error("Не удалось сохранить");
   }
 
   return (
-    <AppShell title="Создать образ">
+    <AppShell title="Создать образ" back>
       <input className="field" placeholder="Название образа" value={name} onChange={(e) => setName(e.target.value)} />
       <div className="mt-5 grid grid-cols-3 gap-3">
-        {clothes.map((i) => <ItemTile key={i.id} name={i.name} brand={i.brand} color={i.color} image={i.image_url} selected={sel.includes(i.id)} onClick={() => toggle(i.id)} />)}
+        {clothes.map((i) => <ItemTile key={i.id} name={i.name} brand={i.brand} color={i.color_hex ?? i.color} image={i.image_url} selected={sel.includes(i.id)} onClick={() => toggle(i.id)} />)}
       </div>
       <h3 className="mt-7 mb-3 font-serif text-2xl">Аксессуары</h3>
       <div className="rounded-[20px] bg-accent p-4">
         <div className="grid grid-cols-3 gap-3">
-          {acc.map((i) => <ItemTile key={i.id} name={i.name} brand={i.brand} color={i.color} image={i.image_url} selected={sel.includes(i.id)} onClick={() => toggle(i.id)} />)}
+          {acc.map((i) => <ItemTile key={i.id} name={i.name} brand={i.brand} color={i.color_hex ?? i.color} image={i.image_url} selected={sel.includes(i.id)} onClick={() => toggle(i.id)} />)}
           {acc.length === 0 && <p className="col-span-3 text-sm text-accent-foreground">Добавьте аксессуары в гардероб</p>}
         </div>
       </div>
