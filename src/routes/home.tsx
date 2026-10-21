@@ -24,7 +24,7 @@ function Home() {
       <h3 className="mt-8 mb-4 font-serif text-2xl">Популярные образы</h3>
       <div className="grid grid-cols-2 gap-4">
         {popular.map((p) => (
-          <Link to="/outfit" key={p.title} className="overflow-hidden rounded-[20px] bg-card">
+          <Link to="/outfit" key={p.title} className="overflow-hidden rounded-[20px] bg-card shadow-card">
             <img src={p.img} alt={p.title} loading="lazy" className="aspect-[3/4] w-full object-cover" />
             <p className="p-3 text-sm font-medium">{p.title}</p>
           </Link>

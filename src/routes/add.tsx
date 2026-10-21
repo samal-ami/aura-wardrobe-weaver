@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Camera } from "lucide-react";
 import { AppShell, Chip } from "@/components/AppShell";
 import { supabase, CATEGORIES } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/add")({
   head: () => ({ meta: [{ title: "AURA — Добавить вещь" }, { name: "description", content: "Добавьте новую вещь в гардероб" }, { property: "og:title", content: "AURA — Добавить вещь" }, { property: "og:description", content: "Добавьте новую вещь в гардероб" }] }),
@@ -33,16 +34,16 @@ function Add() {
     setBusy(true); setMsg("");
     const { data: u } = await supabase.auth.getUser();
     const { error } = await supabase.from("clothing_items").insert({
-      name, category, color, brand, notes, image_url: image, ...(u.user ? { user_id: u.user.id } : {}),
+      name, category, color_hex: color, brand, notes, image_url: image, ...(u.user ? { user_id: u.user.id } : {}),
     });
     setBusy(false);
     if (error) setMsg("Не удалось сохранить: " + error.message);
-    else nav({ to: "/wardrobe" });
+    else { toast.success("Успешно сохранено!"); nav({ to: "/wardrobe" }); }
   }
 
   return (
-    <AppShell title="Новая вещь">
-      <label className="flex aspect-[4/3] cursor-pointer items-center justify-center overflow-hidden rounded-[20px] bg-card">
+    <AppShell title="Добавить вещь" back>
+      <label className="flex aspect-[4/3] cursor-pointer items-center justify-center overflow-hidden rounded-[20px] bg-card shadow-card">
         {image ? <img src={image} alt="" className="h-full w-full object-cover" /> : (
           <div className="flex flex-col items-center gap-2 text-muted-foreground"><Camera size={28} />Загрузить фото</div>
         )}
@@ -61,7 +62,7 @@ function Add() {
         <input className="field" placeholder="Бренд (Zara)" value={brand} onChange={(e) => setBrand(e.target.value)} />
         <textarea className="field min-h-24" placeholder="Заметки" value={notes} onChange={(e) => setNotes(e.target.value)} />
         {msg && <p className="text-sm text-destructive">{msg}</p>}
-        <button className="btn-primary" disabled={!name || busy} onClick={save}>{busy ? "Сохранение…" : "Сохранить"}</button>
+        <button className="btn-primary" disabled={!name || busy} onClick={save}>{busy ? "Сохранение…" : "Сохранить в гардероб"}</button>
       </div>
     </AppShell>
   );
