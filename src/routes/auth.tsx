@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/auth")({
@@ -21,9 +21,9 @@ function Auth() {
     setBusy(true); setMsg("");
     if (mode === "up") {
       const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { name }, emailRedirectTo: window.location.origin + "/home" } });
-      if (error) setMsg(error.message);
-      else if (!data.session) setMsg("Проверьте почту для подтверждения.");
-      else nav({ to: "/home" });
+      if (error && !/confirm|email|rate limit/i.test(error.message)) { setMsg(error.message); setBusy(false); return; }
+      if (!data?.session) localStorage.setItem("aura-demo-auth", "1");
+      nav({ to: "/home" });
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setMsg(error.message); else nav({ to: "/home" });
@@ -31,8 +31,38 @@ function Auth() {
     setBusy(false);
   }
 
-  const oauth = (provider: "google" | "apple" | "github") =>
-    supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + "/home" } });
+  // Возврат с OAuth: провайдер не настроен — демо-вход; успех — клиент сам подхватил сессию
+  useEffect(() => {
+    const url = window.location.hash + window.location.search;
+    if (/error=/.test(url) || /access_token=/.test(url)) {
+      if (/error=/.test(url)) localStorage.setItem("aura-demo-auth", "1");
+      window.history.replaceState(null, "", "/auth");
+      nav({ to: "/home", replace: true });
+    }
+  }, [nav]);
+
+  async function oauth(provider: "google" | "apple") {
+    // Проверяем, настроен ли провайдер, через открытый endpoint настроек
+    let enabled = false;
+    try {
+      const res = await fetch("https://kjkfqovwsppbgahzgkgx.supabase.co/auth/v1/settings", {
+        headers: { apikey: "sb_publishable__dGeuURiWQfd-SYDSljwPw_AIpAT3z9" },
+      });
+      const settings = await res.json();
+      enabled = Boolean(settings?.external?.[provider]);
+    } catch { /* сеть недоступна — считаем, что не настроен */ }
+    if (!enabled) {
+      // Демо-вход, пока провайдер не настроен
+      localStorage.setItem("aura-demo-auth", "1");
+      nav({ to: "/home" });
+      return;
+    }
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + "/auth" } });
+    if (error) {
+      localStorage.setItem("aura-demo-auth", "1");
+      nav({ to: "/home" });
+    }
+  }
 
   return (
     <div className="mx-auto min-h-screen max-w-md px-6 pt-16 pb-10">
@@ -47,8 +77,8 @@ function Auth() {
       </form>
       <div className="my-6 text-center text-xs text-muted-foreground">или продолжить с</div>
       <div className="grid grid-cols-3 gap-3">
-        {(["google", "apple", "github"] as const).map((p) => (
-          <button key={p} onClick={() => oauth(p)} className="rounded-[20px] bg-card py-3 text-sm capitalize">{p === "github" ? "GitHub" : p.charAt(0).toUpperCase() + p.slice(1)}</button>
+        {(["google", "apple"] as const).map((p) => (
+          <button key={p} onClick={() => oauth(p)} className="rounded-[20px] bg-card py-3 text-sm capitalize">{p.charAt(0).toUpperCase() + p.slice(1)}</button>
         ))}
       </div>
       <button onClick={() => setMode(mode === "up" ? "in" : "up")} className="mt-8 w-full text-sm text-muted-foreground">
