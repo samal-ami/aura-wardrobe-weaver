@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/auth")({
@@ -31,8 +31,18 @@ function Auth() {
     setBusy(false);
   }
 
+  // Возврат с OAuth: провайдер не настроен — демо-вход; успех — клиент сам подхватил сессию
+  useEffect(() => {
+    const url = window.location.hash + window.location.search;
+    if (/error=/.test(url) || /access_token=/.test(url)) {
+      if (/error=/.test(url)) localStorage.setItem("aura-demo-auth", "1");
+      window.history.replaceState(null, "", "/auth");
+      nav({ to: "/home", replace: true });
+    }
+  }, [nav]);
+
   async function oauth(provider: "google" | "apple") {
-    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + "/home" } });
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + "/auth" } });
     if (error) {
       // Провайдер ещё не настроен — выполняем демо-вход
       localStorage.setItem("aura-demo-auth", "1");
