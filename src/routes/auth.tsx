@@ -42,9 +42,21 @@ function Auth() {
   }, [nav]);
 
   async function oauth(provider: "google" | "apple") {
+    // Проверяем, настроен ли провайдер, через открытый endpoint настроек
+    let enabled = false;
+    try {
+      const res = await fetch("https://kjkfqovwsppbgahzgkgx.supabase.co/auth/v1/settings");
+      const settings = await res.json();
+      enabled = Boolean(settings?.external?.[provider]);
+    } catch { /* сеть недоступна — считаем, что не настроен */ }
+    if (!enabled) {
+      // Демо-вход, пока провайдер не настроен
+      localStorage.setItem("aura-demo-auth", "1");
+      nav({ to: "/home" });
+      return;
+    }
     const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + "/auth" } });
     if (error) {
-      // Провайдер ещё не настроен — выполняем демо-вход
       localStorage.setItem("aura-demo-auth", "1");
       nav({ to: "/home" });
     }
