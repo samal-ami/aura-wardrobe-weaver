@@ -1,11 +1,20 @@
-import { Link } from "@tanstack/react-router";
-import { Home, Shirt, Plus, Sparkles, User } from "lucide-react";
+import { Link, useRouter } from "@tanstack/react-router";
+import { Home, Shirt, Plus, Sparkles, User, ChevronLeft } from "lucide-react";
 import type { ReactNode } from "react";
 
-export function AppShell({ title, children, right }: { title?: string; children: ReactNode; right?: ReactNode }) {
+export function AppShell({ title, children, right, back }: { title?: string; children: ReactNode; right?: ReactNode; back?: boolean }) {
+  const router = useRouter();
   return (
     <div className="mx-auto min-h-screen max-w-md bg-background pb-28">
-      {title && (
+      {back ? (
+        <header className="sticky top-0 z-40 grid grid-cols-[40px_1fr_40px] items-center bg-background px-4 pt-6 pb-4">
+          <button type="button" aria-label="Назад" onClick={() => (window.history.length > 1 ? router.history.back() : router.navigate({ to: "/home" }))} className="flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-card text-foreground">
+            <ChevronLeft size={22} />
+          </button>
+          <h1 className="text-center font-serif text-2xl text-foreground">{title}</h1>
+          <div className="flex justify-end">{right}</div>
+        </header>
+      ) : title && (
         <header className="flex items-center justify-between px-6 pt-8 pb-4">
           <h1 className="font-serif text-3xl text-foreground">{title}</h1>
           {right}
@@ -49,7 +58,7 @@ export function Chip({ active, children, onClick }: { active?: boolean | undefin
 
 export function ItemTile({ name, brand, color, image, selected, onClick }: { name: string; brand?: string | null | undefined; color?: string | null | undefined; image?: string | null | undefined; selected?: boolean; onClick?: () => void }) {
   return (
-    <button type="button" onClick={onClick} className={`overflow-hidden rounded-[20px] bg-card text-left transition ${selected ? "ring-2 ring-primary" : ""}`}>
+    <button type="button" onClick={onClick} className={`overflow-hidden rounded-[20px] bg-card shadow-card text-left transition ${selected ? "ring-2 ring-primary" : ""}`}>
       <div className="flex aspect-square items-center justify-center bg-secondary">
         {image ? (
           <img src={image} alt={name} className="h-full w-full object-cover" loading="lazy" />
