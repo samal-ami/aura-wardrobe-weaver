@@ -17,6 +17,7 @@ import { Route as OutfitRouteImport } from './routes/outfit'
 import { Route as OutfitsRouteImport } from './routes/outfits'
 import { Route as PreferencesRouteImport } from './routes/preferences'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as WardrobeRouteImport } from './routes/wardrobe'
 
 const IndexRoute = IndexRouteImport.update({
@@ -59,6 +60,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WardrobeRoute = WardrobeRouteImport.update({
   id: '/wardrobe',
   path: '/wardrobe',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/outfits': typeof OutfitsRoute
   '/preferences': typeof PreferencesRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/wardrobe': typeof WardrobeRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/outfits': typeof OutfitsRoute
   '/preferences': typeof PreferencesRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/wardrobe': typeof WardrobeRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/outfits': typeof OutfitsRoute
   '/preferences': typeof PreferencesRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/wardrobe': typeof WardrobeRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/outfits'
     | '/preferences'
     | '/profile'
+    | '/settings'
     | '/wardrobe'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/outfits'
     | '/preferences'
     | '/profile'
+    | '/settings'
     | '/wardrobe'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/outfits'
     | '/preferences'
     | '/profile'
+    | '/settings'
     | '/wardrobe'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   OutfitsRoute: typeof OutfitsRoute
   PreferencesRoute: typeof PreferencesRoute
   ProfileRoute: typeof ProfileRoute
+  SettingsRoute: typeof SettingsRoute
   WardrobeRoute: typeof WardrobeRoute
 }
 
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wardrobe': {
       id: '/wardrobe'
       path: '/wardrobe'
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   OutfitsRoute: OutfitsRoute,
   PreferencesRoute: PreferencesRoute,
   ProfileRoute: ProfileRoute,
+  SettingsRoute: SettingsRoute,
   WardrobeRoute: WardrobeRoute,
 }
 export const routeTree = rootRouteImport
