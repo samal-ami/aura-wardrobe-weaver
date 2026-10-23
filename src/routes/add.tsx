@@ -7,7 +7,7 @@ import { AppShell, Chip, Spinner } from "@/components/AppShell";
 import { CATEGORIES, SEASONS, deleteItem, fetchItem, saveItem, uploadPhoto } from "@/lib/supabase";
 
 export const Route = createFileRoute("/add")({
-  validateSearch: (s: Record<string, unknown>): { id?: string } => (typeof s.id === "string" ? { id: s.id } : {}),
+  validateSearch: (s: Record<string, unknown>): { id?: string } => (typeof s["id"] === "string" ? { id: s["id"] } : {}),
   head: () => ({ meta: [{ title: "AURA — Вещь" }, { name: "description", content: "Добавьте или измените вещь в гардеробе" }, { property: "og:title", content: "AURA — Вещь" }, { property: "og:description", content: "Добавьте или измените вещь в гардеробе" }] }),
   component: Add,
 });
@@ -24,14 +24,14 @@ function Add() {
   );
 }
 
-function ItemForm({ id, item }: { id?: string; item: Awaited<ReturnType<typeof fetchItem>> }) {
+function ItemForm({ id, item }: { id?: string | undefined; item: Awaited<ReturnType<typeof fetchItem>> }) {
   const nav = useNavigate();
   const qc = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(item?.photo ?? null);
   const [name, setName] = useState(item?.name ?? "");
   const [category, setCategory] = useState(item?.category ?? "Верх");
-  const [color, setColor] = useState(item?.color_hex ?? COLORS[0]);
+  const [color, setColor] = useState<string>(item?.color_hex ?? COLORS[0] ?? "#FFFFFF");
   const [season, setSeason] = useState(item?.season ?? "");
   const [brand, setBrand] = useState(item?.brand ?? "");
   const [notes, setNotes] = useState(item?.notes ?? "");

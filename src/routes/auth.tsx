@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 type Mode = "in" | "up" | "forgot";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>): { mode?: Mode } => ({ mode: s.mode === "in" || s.mode === "forgot" ? s.mode : undefined }),
+  validateSearch: (s: Record<string, unknown>): { mode?: Mode } => (s["mode"] === "in" || s["mode"] === "forgot" ? { mode: s["mode"] } : {}),
   head: () => ({ meta: [{ title: "AURA — Вход" }, { name: "description", content: "Вход и регистрация в AURA" }, { property: "og:title", content: "AURA — Вход" }, { property: "og:description", content: "Вход и регистрация в AURA" }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: Auth,
 });
