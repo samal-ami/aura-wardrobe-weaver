@@ -1,6 +1,44 @@
-import { Link, useRouter } from "@tanstack/react-router";
-import { Home, Shirt, Plus, Sparkles, User, ChevronLeft } from "lucide-react";
-import type { ReactNode } from "react";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { Home, Shirt, Plus, Sparkles, User, ChevronLeft, Loader2 } from "lucide-react";
+import { useEffect, type ReactNode } from "react";
+import { useSession } from "@/lib/supabase";
+
+/** Client-side guard: inner screens need a real session, otherwise go to /auth. */
+function AuthGate({ children }: { children: ReactNode }) {
+  const { session, loading } = useSession();
+  const nav = useNavigate();
+  useEffect(() => { if (!loading && !session) void nav({ to: "/auth", replace: true }); }, [loading, session, nav]);
+  if (loading || !session) return <Spinner />;
+  return <>{children}</>;
+}
+
+export function Spinner({ label }: { label?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 py-20 text-muted-foreground">
+      <Loader2 className="animate-spin" size={24} />
+      {label && <p className="text-sm">{label}</p>}
+    </div>
+  );
+}
+
+export function ErrorNote({ text, onRetry }: { text: string; onRetry?: () => void }) {
+  return (
+    <div className="rounded-[20px] bg-card p-5 text-center shadow-card">
+      <p className="text-sm text-destructive">{text}</p>
+      {onRetry && <button type="button" onClick={onRetry} className="mt-3 text-sm font-semibold underline">Повторить</button>}
+    </div>
+  );
+}
+
+export function Empty({ title, text, action }: { title: string; text: string; action?: ReactNode }) {
+  return (
+    <div className="mt-6 rounded-[20px] bg-card p-8 text-center shadow-card">
+      <p className="font-serif text-2xl">{title}</p>
+      <p className="mt-2 text-sm text-muted-foreground">{text}</p>
+      {action && <div className="mt-5">{action}</div>}
+    </div>
+  );
+}
 
 export function AppShell({ title, children, right, back }: { title?: string; children: ReactNode; right?: ReactNode; back?: boolean }) {
   const router = useRouter();
@@ -16,11 +54,11 @@ export function AppShell({ title, children, right, back }: { title?: string; chi
         </header>
       ) : title && (
         <header className="flex items-center justify-between px-6 pt-8 pb-4">
-          <h1 className="font-serif text-3xl text-foreground">{title}</h1>
+          <h1 className={`font-serif text-3xl text-foreground ${title === "AURA" ? "tracking-[0.25em]" : ""}`}>{title}</h1>
           {right}
         </header>
       )}
-      <main className="px-6">{children}</main>
+      <main className="px-6"><AuthGate>{children}</AuthGate></main>
       <BottomNav />
     </div>
   );
@@ -34,7 +72,7 @@ function BottomNav() {
       <div className="flex items-end justify-between">
         <Link to="/home" className={item} activeProps={active}><Home size={22} />Главная</Link>
         <Link to="/wardrobe" className={item} activeProps={active}><Shirt size={22} />Гардероб</Link>
-        <Link to="/add" aria-label="Добавить" className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-soft">
+        <Link to="/add" aria-label="Добавить" className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-soft transition active:scale-95">
           <Plus size={26} />
         </Link>
         <Link to="/outfits" className={item} activeProps={active}><Sparkles size={22} />Образы</Link>
@@ -46,11 +84,7 @@ function BottomNav() {
 
 export function Chip({ active, children, onClick }: { active?: boolean | undefined; children: ReactNode; onClick?: (() => void) | undefined }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`whitespace-nowrap rounded-full px-4 py-2 text-sm transition ${active ? "bg-primary text-primary-foreground" : "bg-card text-foreground"}`}
-    >
+    <button type="button" aria-pressed={!!active} onClick={onClick} className={`whitespace-nowrap rounded-full px-4 py-2 text-sm transition active:scale-95 ${active ? "bg-primary text-primary-foreground" : "bg-card text-foreground"}`}>
       {children}
     </button>
   );
@@ -58,18 +92,25 @@ export function Chip({ active, children, onClick }: { active?: boolean | undefin
 
 export function ItemTile({ name, brand, color, image, selected, onClick }: { name: string; brand?: string | null | undefined; color?: string | null | undefined; image?: string | null | undefined; selected?: boolean; onClick?: () => void }) {
   return (
-    <button type="button" onClick={onClick} className={`overflow-hidden rounded-[20px] bg-card shadow-card text-left transition ${selected ? "ring-2 ring-primary" : ""}`}>
+    <button type="button" onClick={onClick} aria-pressed={selected} className={`overflow-hidden rounded-[20px] bg-card shadow-card text-left transition active:scale-[0.98] ${selected ? "ring-2 ring-primary" : ""}`}>
       <div className="flex aspect-square items-center justify-center bg-secondary">
-        {image ? (
-          <img src={image} alt={name} className="h-full w-full object-cover" loading="lazy" />
-        ) : (
-          <div className="h-16 w-16 rounded-full border border-border" style={color ? { background: color } : {}} />
-        )}
+        {image ? <img src={image} alt={name} className="h-full w-full object-cover" loading="lazy" /> : <div className="h-16 w-16 rounded-full border border-border" style={color ? { background: color } : {}} />}
       </div>
       <div className="p-3">
-        <p className="text-sm font-medium text-foreground">{name}</p>
-        {brand && <p className="text-xs uppercase tracking-wide text-muted-foreground">{brand}</p>}
+        <p className="truncate text-sm font-medium text-foreground">{name}</p>
+        {brand && <p className="truncate text-xs uppercase tracking-wide text-muted-foreground">{brand}</p>}
       </div>
+    </button>
+  );
+}
+
+export function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} onClick={() => onChange(!on)} className="flex w-full items-center justify-between rounded-[20px] bg-card px-5 py-4 shadow-card">
+      {label}
+      <span className={`relative h-7 w-12 rounded-full transition ${on ? "bg-primary" : "bg-secondary"}`}>
+        <span className={`absolute top-1 h-5 w-5 rounded-full bg-card shadow-card transition-all ${on ? "left-6" : "left-1"}`} />
+      </span>
     </button>
   );
 }
