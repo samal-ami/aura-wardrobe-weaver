@@ -98,7 +98,7 @@ export async function fetchItems(): Promise<ClothingItem[]> {
 
 export async function fetchItem(id: string): Promise<ClothingItem | null> {
   const data = check(await supabase.from("clothing_items").select("*").eq("id", id).maybeSingle());
-  return data ? (await withPhotos([data as ClothingItem]))[0] : null;
+  return data ? (await withPhotos([data as ClothingItem]))[0] ?? null : null;
 }
 
 export type ItemInput = { name: string; category: string; brand: string; color_hex: string; season: string; notes: string; image_path?: string | null };
@@ -165,7 +165,7 @@ export async function fetchProfile(): Promise<Profile> {
   let p = check(await supabase.from("profiles").select("id,display_name,status,avatar_url").eq("id", uid).maybeSingle()) as Profile | null;
   if (!p) {
     const { data: u } = await supabase.auth.getUser();
-    const name = (u.user?.user_metadata?.name as string | undefined) || "Asemay";
+    const name = (u.user?.user_metadata?.["name"] as string | undefined) || "Asemay";
     p = check(await supabase.from("profiles").insert({ id: uid, display_name: name, status: "Разработчик будущего ✨" }).select("id,display_name,status,avatar_url").single()) as Profile;
   }
   const urls = p.avatar_url && !p.avatar_url.startsWith("http") ? await signPaths([p.avatar_url]) : {};

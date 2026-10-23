@@ -15,7 +15,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as HomeRouteImport } from './routes/home'
-import { Route as OutfitRouteImport } from './routes/outfit'
 import { Route as OutfitsRouteImport } from './routes/outfits'
 import { Route as PreferencesRouteImport } from './routes/preferences'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -54,11 +53,6 @@ const HomeRoute = HomeRouteImport.update({
   path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OutfitRoute = OutfitRouteImport.update({
-  id: '/outfit',
-  path: '/outfit',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const OutfitsRoute = OutfitsRouteImport.update({
   id: '/outfits',
   path: '/outfits',
@@ -90,9 +84,9 @@ const WardrobeRoute = WardrobeRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const OutfitIdRoute = OutfitIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => OutfitRoute,
+  id: '/outfit/$id',
+  path: '/outfit/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -102,7 +96,6 @@ export interface FileRoutesByFullPath {
   '/create': typeof CreateRoute
   '/favorites': typeof FavoritesRoute
   '/home': typeof HomeRoute
-  '/outfit': typeof OutfitRouteWithChildren
   '/outfits': typeof OutfitsRoute
   '/preferences': typeof PreferencesRoute
   '/profile': typeof ProfileRoute
@@ -118,7 +111,6 @@ export interface FileRoutesByTo {
   '/create': typeof CreateRoute
   '/favorites': typeof FavoritesRoute
   '/home': typeof HomeRoute
-  '/outfit': typeof OutfitRouteWithChildren
   '/outfits': typeof OutfitsRoute
   '/preferences': typeof PreferencesRoute
   '/profile': typeof ProfileRoute
@@ -135,7 +127,6 @@ export interface FileRoutesById {
   '/create': typeof CreateRoute
   '/favorites': typeof FavoritesRoute
   '/home': typeof HomeRoute
-  '/outfit': typeof OutfitRouteWithChildren
   '/outfits': typeof OutfitsRoute
   '/preferences': typeof PreferencesRoute
   '/profile': typeof ProfileRoute
@@ -153,7 +144,6 @@ export interface FileRouteTypes {
     | '/create'
     | '/favorites'
     | '/home'
-    | '/outfit'
     | '/outfits'
     | '/preferences'
     | '/profile'
@@ -169,7 +159,6 @@ export interface FileRouteTypes {
     | '/create'
     | '/favorites'
     | '/home'
-    | '/outfit'
     | '/outfits'
     | '/preferences'
     | '/profile'
@@ -185,7 +174,6 @@ export interface FileRouteTypes {
     | '/create'
     | '/favorites'
     | '/home'
-    | '/outfit'
     | '/outfits'
     | '/preferences'
     | '/profile'
@@ -202,13 +190,13 @@ export interface RootRouteChildren {
   CreateRoute: typeof CreateRoute
   FavoritesRoute: typeof FavoritesRoute
   HomeRoute: typeof HomeRoute
-  OutfitRoute: typeof OutfitRouteWithChildren
   OutfitsRoute: typeof OutfitsRoute
   PreferencesRoute: typeof PreferencesRoute
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   WardrobeRoute: typeof WardrobeRoute
+  OutfitIdRoute: typeof OutfitIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -255,13 +243,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/outfit': {
-      id: '/outfit'
-      path: '/outfit'
-      fullPath: '/outfit'
-      preLoaderRoute: typeof OutfitRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/outfits': {
       id: '/outfits'
       path: '/outfits'
@@ -306,24 +287,13 @@ declare module '@tanstack/react-router' {
     }
     '/outfit/$id': {
       id: '/outfit/$id'
-      path: '/$id'
+      path: '/outfit/$id'
       fullPath: '/outfit/$id'
       preLoaderRoute: typeof OutfitIdRouteImport
-      parentRoute: typeof OutfitRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface OutfitRouteChildren {
-  OutfitIdRoute: typeof OutfitIdRoute
-}
-
-const OutfitRouteChildren: OutfitRouteChildren = {
-  OutfitIdRoute: OutfitIdRoute,
-}
-
-const OutfitRouteWithChildren =
-  OutfitRoute._addFileChildren(OutfitRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -332,13 +302,13 @@ const rootRouteChildren: RootRouteChildren = {
   CreateRoute: CreateRoute,
   FavoritesRoute: FavoritesRoute,
   HomeRoute: HomeRoute,
-  OutfitRoute: OutfitRouteWithChildren,
   OutfitsRoute: OutfitsRoute,
   PreferencesRoute: PreferencesRoute,
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   WardrobeRoute: WardrobeRoute,
+  OutfitIdRoute: OutfitIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
