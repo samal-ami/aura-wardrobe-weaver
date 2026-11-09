@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ErrorNote, Spinner, Toggle } from "@/components/AppShell";
-import { fetchSettings, saveSettings, supabase, type Settings as S } from "@/lib/supabase";
+import { fetchSettings, saveSettings, supabase, demoSignOut, type Settings as S } from "@/lib/supabase";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "AURA — Настройки" }, { name: "description", content: "Настройки приложения AURA" }, { property: "og:title", content: "AURA — Настройки" }, { property: "og:description", content: "Настройки приложения AURA" }] }),
@@ -25,6 +25,7 @@ function Settings() {
   }
   async function signOut() {
     await qc.cancelQueries(); qc.clear();
+    demoSignOut();
     await supabase.auth.signOut();
     void nav({ to: "/auth", search: { mode: "in" }, replace: true });
   }

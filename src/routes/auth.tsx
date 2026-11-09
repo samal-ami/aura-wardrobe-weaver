@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
+import { supabase, demoSignIn, checkSupabaseReachable } from "@/lib/supabase";
 
 type Mode = "in" | "up" | "forgot";
 
@@ -34,7 +34,10 @@ export function Auth() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => { if (data.session) void nav({ to: "/home", replace: true }); });
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) void nav({ to: "/home", replace: true });
+      else if (localStorage.getItem("aura:demo-session")) void nav({ to: "/home", replace: true });
+    });
   }, [nav]);
 
   async function submit(e: React.FormEvent) {
@@ -45,23 +48,38 @@ export function Auth() {
     try {
       if (mode === "up") {
         const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { name: name.trim() || "Asemay" }, emailRedirectTo: window.location.origin + "/home" } });
-        if (error) return setMsg(ru(error.message));
+        if (error) { if (isNetworkError(error.message)) { demoLogin(email, name.trim() || "Asemay"); return; } return setMsg(ru(error.message)); }
         if (data.session) { toast.success("Добро пожаловать в AURA!"); void nav({ to: "/home" }); }
         else { setInfo("Мы отправили письмо на " + email + ". Подтвердите email и войдите."); setMode("in"); }
       } else if (mode === "in") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) return setMsg(ru(error.message));
+        if (error) { if (isNetworkError(error.message)) { demoLogin(email, "Asemay"); return; } return setMsg(ru(error.message)); }
         void nav({ to: "/home" });
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/reset-password" });
-        if (error) return setMsg(ru(error.message));
+        if (error) { if (isNetworkError(error.message)) { demoLogin(email, name.trim() || "Asemay"); return; } return setMsg(ru(error.message)); }
         setInfo("Ссылка для смены пароля отправлена на " + email);
       }
+    } catch (e) {
+      if (isNetworkError((e as Error).message)) { demoLogin(email, name.trim() || "Asemay"); return; }
+      setMsg(ru((e as Error).message));
     } finally { setBusy(false); }
+  }
+
+  function isNetworkError(message: string): boolean {
+    return /Failed to fetch|NetworkError|fetch failed|Network request failed|ERR_NETWORK/i.test(message);
+  }
+
+  function demoLogin(email: string, name: string) {
+    demoSignIn(email, name);
+    toast.success("Добро пожаловать в AURA! (демо-режим)");
+    void nav({ to: "/home", replace: true });
   }
 
   async function oauth(provider: "google" | "apple") {
     setMsg("");
+    const reachable = await checkSupabaseReachable();
+    if (!reachable) { demoLogin(`demo@${provider}.com`, provider === "google" ? "Google User" : "Apple User"); return; }
     const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + "/home" } });
     if (error) setMsg(`Вход через ${provider === "google" ? "Google" : "Apple"} пока не включён в настройках проекта`);
   }

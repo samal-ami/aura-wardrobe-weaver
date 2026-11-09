@@ -12,6 +12,47 @@ export const supabase = createClient(URL, KEY, {
   },
 });
 
+// ---------- demo mode (fallback when Supabase is unreachable) ----------
+const DEMO_KEY = "aura:demo-session";
+const DEMO_USER_ID = "demo-user-0000-0000-0000-000000000000";
+
+type DemoUser = { id: string; email: string; name: string };
+
+function isDemo(): boolean {
+  return typeof window !== "undefined" && localStorage.getItem(DEMO_KEY) !== null;
+}
+
+function demoUser(): DemoUser | null {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem(DEMO_KEY);
+  return raw ? (JSON.parse(raw) as DemoUser) : null;
+}
+
+/** Sign in a demo user and persist to localStorage; returns true on success. */
+export function demoSignIn(email: string, name: string): boolean {
+  if (typeof window === "undefined") return false;
+  localStorage.setItem(DEMO_KEY, JSON.stringify({ id: DEMO_USER_ID, email, name } satisfies DemoUser));
+  return true;
+}
+
+/** Clear demo session. */
+export function demoSignOut(): void {
+  if (typeof window !== "undefined") localStorage.removeItem(DEMO_KEY);
+}
+
+/** Check Supabase connectivity with a lightweight probe; returns true if reachable. */
+export async function checkSupabaseReachable(): Promise<boolean> {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const res = await fetch(`${URL}/auth/v1/health`, { signal: ctrl.signal, headers: { apikey: KEY } });
+    clearTimeout(t);
+    return res.ok || res.status < 500;
+  } catch {
+    return false;
+  }
+}
+
 export type ClothingItem = {
   id: string;
   user_id?: string;
@@ -44,6 +85,8 @@ export function dbError(e: { message?: string; code?: string } | null | undefine
 }
 
 export async function requireUserId(): Promise<string> {
+  const demo = demoUser();
+  if (demo) return demo.id;
   const { data } = await supabase.auth.getUser();
   if (!data.user) throw new Error("Войдите в аккаунт");
   return data.user.id;
@@ -55,9 +98,31 @@ function check<T>(r: { data: T; error: { message?: string; code?: string } | nul
 }
 
 // ---------- session ----------
+function fakeDemoSession(): Session | null {
+  const u = demoUser();
+  if (!u) return null;
+  // Minimal shape that AppShell's AuthGate accepts: truthy session object.
+  return {
+    access_token: "demo-token",
+    refresh_token: "demo-refresh",
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    token_type: "bearer",
+    user: {
+      id: u.id,
+      app_metadata: {},
+      user_metadata: { name: u.name },
+      aud: "authenticated",
+      created_at: new Date().toISOString(),
+    } as unknown as Session["user"],
+  } as unknown as Session;
+}
+
 export function useSession() {
   const [state, set] = useState<{ session: Session | null; loading: boolean }>({ session: null, loading: true });
   useEffect(() => {
+    const demo = fakeDemoSession();
+    if (demo) { set({ session: demo, loading: false }); return; }
     supabase.auth.getSession().then(({ data }) => set({ session: data.session, loading: false }));
     const { data } = supabase.auth.onAuthStateChange((_e, session) => set({ session, loading: false }));
     return () => data.subscription.unsubscribe();
@@ -67,6 +132,7 @@ export function useSession() {
 
 // ---------- photos ----------
 export async function uploadPhoto(file: File, folder: "items" | "avatars"): Promise<string> {
+  if (isDemo()) return "";
   const uid = await requireUserId();
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
   const path = `${uid}/${folder}/${crypto.randomUUID()}.${ext}`;
@@ -91,12 +157,14 @@ async function withPhotos(items: ClothingItem[]): Promise<ClothingItem[]> {
 
 // ---------- clothing items ----------
 export async function fetchItems(): Promise<ClothingItem[]> {
+  if (isDemo()) return [];
   await requireUserId();
   const data = check(await supabase.from("clothing_items").select("*").order("created_at", { ascending: false }));
   return withPhotos((data ?? []) as ClothingItem[]);
 }
 
 export async function fetchItem(id: string): Promise<ClothingItem | null> {
+  if (isDemo()) return null;
   const data = check(await supabase.from("clothing_items").select("*").eq("id", id).maybeSingle());
   return data ? (await withPhotos([data as ClothingItem]))[0] ?? null : null;
 }
@@ -104,6 +172,7 @@ export async function fetchItem(id: string): Promise<ClothingItem | null> {
 export type ItemInput = { name: string; category: string; brand: string; color_hex: string; season: string; notes: string; image_path?: string | null };
 
 export async function saveItem(input: ItemInput, id?: string) {
+  if (isDemo()) return;
   const user_id = await requireUserId();
   const row = { ...input, brand: input.brand || null, notes: input.notes || null, season: input.season || null, updated_at: new Date().toISOString() };
   if (id) check(await supabase.from("clothing_items").update(row).eq("id", id));
@@ -111,12 +180,14 @@ export async function saveItem(input: ItemInput, id?: string) {
 }
 
 export async function deleteItem(item: ClothingItem) {
+  if (isDemo()) return;
   check(await supabase.from("clothing_items").delete().eq("id", item.id));
   if (item.image_path) await supabase.storage.from(BUCKET).remove([item.image_path]);
 }
 
 // ---------- outfits ----------
 export async function fetchOutfits(): Promise<OutfitWithItems[]> {
+  if (isDemo()) return [];
   await requireUserId();
   const outfits = check(await supabase.from("outfits").select("id,title,description,style,season,occasion,created_at").order("created_at", { ascending: false })) as Outfit[];
   if (!outfits.length) return [];
@@ -134,6 +205,7 @@ export async function fetchOutfit(id: string): Promise<OutfitWithItems | null> {
 export type OutfitInput = { title: string; style: string; season: string; occasion: string; description: string };
 
 export async function createOutfit(input: OutfitInput, itemIds: string[]): Promise<string> {
+  if (isDemo()) { if (!itemIds.length) throw new Error("Выберите хотя бы одну вещь"); return crypto.randomUUID(); }
   const user_id = await requireUserId();
   if (!itemIds.length) throw new Error("Выберите хотя бы одну вещь");
   const row = check(await supabase.from("outfits").insert({ ...input, title: input.title.trim() || "Новый образ", user_id }).select("id").single()) as { id: string };
@@ -143,17 +215,20 @@ export async function createOutfit(input: OutfitInput, itemIds: string[]): Promi
 }
 
 export async function deleteOutfit(id: string) {
+  if (isDemo()) return;
   check(await supabase.from("outfits").delete().eq("id", id));
 }
 
 // ---------- favorites ----------
 export async function fetchFavoriteIds(type: "outfit" | "item"): Promise<string[]> {
+  if (isDemo()) return [];
   await requireUserId();
   const data = check(await supabase.from("favorites").select("target_id").eq("target_type", type)) as { target_id: string }[];
   return data.map((d) => d.target_id);
 }
 
 export async function setFavorite(type: "outfit" | "item", id: string, on: boolean) {
+  if (isDemo()) return;
   const user_id = await requireUserId();
   if (on) check(await supabase.from("favorites").upsert({ user_id, target_type: type, target_id: id }, { onConflict: "user_id,target_type,target_id", ignoreDuplicates: true }));
   else check(await supabase.from("favorites").delete().eq("target_type", type).eq("target_id", id));
@@ -161,6 +236,8 @@ export async function setFavorite(type: "outfit" | "item", id: string, on: boole
 
 // ---------- profile / prefs / settings ----------
 export async function fetchProfile(): Promise<Profile> {
+  const demo = demoUser();
+  if (demo) return { id: demo.id, display_name: demo.name, status: "Демо-режим ✨", avatar_url: null, avatar: null };
   const uid = await requireUserId();
   let p = check(await supabase.from("profiles").select("id,display_name,status,avatar_url").eq("id", uid).maybeSingle()) as Profile | null;
   if (!p) {
@@ -173,11 +250,13 @@ export async function fetchProfile(): Promise<Profile> {
 }
 
 export async function updateProfile(patch: Partial<Pick<Profile, "display_name" | "status" | "avatar_url">>) {
+  if (isDemo()) return;
   const id = await requireUserId();
   check(await supabase.from("profiles").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id));
 }
 
 export async function fetchStats() {
+  if (isDemo()) return { items: 0, outfits: 0, favorites: 0 };
   await requireUserId();
   const count = async (t: string, f?: [string, string]) => {
     let q = supabase.from(t).select("*", { count: "exact", head: true });
@@ -192,22 +271,26 @@ export async function fetchStats() {
 
 const DEFAULT_PREFS: Preferences = { favorite_styles: [], favorite_colors: [], priorities: [] };
 export async function fetchPreferences(): Promise<Preferences> {
+  if (isDemo()) return DEFAULT_PREFS;
   await requireUserId();
   const d = check(await supabase.from("user_preferences").select("favorite_styles,favorite_colors,priorities").maybeSingle()) as Preferences | null;
   return { ...DEFAULT_PREFS, ...(d ?? {}) };
 }
 export async function savePreferences(p: Preferences) {
+  if (isDemo()) return;
   const user_id = await requireUserId();
   check(await supabase.from("user_preferences").upsert({ user_id, ...p, updated_at: new Date().toISOString() }));
 }
 
 const DEFAULT_SETTINGS: Settings = { notifications_enabled: true, daily_outfits_enabled: false, private_profile: false };
 export async function fetchSettings(): Promise<Settings> {
+  if (isDemo()) return DEFAULT_SETTINGS;
   await requireUserId();
   const d = check(await supabase.from("user_settings").select("notifications_enabled,daily_outfits_enabled,private_profile").maybeSingle()) as Settings | null;
   return { ...DEFAULT_SETTINGS, ...(d ?? {}) };
 }
 export async function saveSettings(s: Settings) {
+  if (isDemo()) return;
   const user_id = await requireUserId();
   check(await supabase.from("user_settings").upsert({ user_id, ...s, updated_at: new Date().toISOString() }));
 }
