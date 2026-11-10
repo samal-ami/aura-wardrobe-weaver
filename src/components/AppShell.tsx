@@ -1,7 +1,8 @@
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
-import { Home, Shirt, Plus, Sparkles, ChevronLeft, Loader2, Users } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Home, Shirt, Plus, Sparkles, ChevronLeft, Loader2, Users, UserRound } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
-import { useSession } from "@/lib/supabase";
+import { useSession, fetchProfile } from "@/lib/supabase";
 
 /** Client-side guard: inner screens need a real session, otherwise go to /auth. */
 function AuthGate({ children }: { children: ReactNode }) {
@@ -42,25 +43,35 @@ export function Empty({ title, text, action }: { title: string; text: string; ac
 
 export function AppShell({ title, children, right, back }: { title?: string; children: ReactNode; right?: ReactNode; back?: boolean }) {
   const router = useRouter();
+  const avatar = <HeaderAvatar />;
   return (
     <div className="mx-auto min-h-screen max-w-md bg-background pb-28">
       {back ? (
-        <header className="sticky top-0 z-40 grid grid-cols-[40px_1fr_40px] items-center bg-background px-4 pt-6 pb-4">
+        <header className="sticky top-0 z-40 grid grid-cols-[40px_1fr_auto] items-center bg-background px-4 pt-6 pb-4">
           <button type="button" aria-label="Назад" onClick={() => (window.history.length > 1 ? router.history.back() : router.navigate({ to: "/home" }))} className="flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-card text-foreground">
             <ChevronLeft size={22} />
           </button>
           <h1 className="text-center font-serif text-2xl text-foreground">{title}</h1>
-          <div className="flex justify-end">{right}</div>
+          <div className="flex items-center gap-2">{right}{avatar}</div>
         </header>
       ) : title && (
         <header className="flex items-center justify-between px-6 pt-8 pb-4">
           <h1 className={`font-serif text-3xl text-foreground ${title === "AURA" ? "tracking-[0.25em]" : ""}`}>{title}</h1>
-          {right}
+          <div className="flex items-center gap-2">{right}{avatar}</div>
         </header>
       )}
       <main className="px-6"><AuthGate>{children}</AuthGate></main>
       <BottomNav />
     </div>
+  );
+}
+
+function HeaderAvatar() {
+  const { data: profile } = useQuery({ queryKey: ["profile"], queryFn: fetchProfile });
+  return (
+    <Link to="/profile" aria-label="Профиль" className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-card shadow-card">
+      {profile?.avatar ? <img src={profile.avatar} alt={profile.display_name ?? "Профиль"} className="h-full w-full object-cover" /> : <UserRound size={20} className="text-muted-foreground" />}
+    </Link>
   );
 }
 

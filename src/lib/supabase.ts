@@ -176,14 +176,14 @@ function setLocalItems(items: ClothingItem[]) {
 }
 
 const DEMO_ITEMS: ClothingItem[] = [
-  { id: "demo-1", name: "Блейзер оверсайз", category: "Верх", brand: "Cos", color_hex: "#2B2B2B", season: "Всесезон", image_url: null, image_path: null, photo: null },
-  { id: "demo-2", name: "Белая рубашка", category: "Верх", brand: "Uniqlo", color_hex: "#FFFFFF", season: "Всесезон", image_url: null, image_path: null, photo: null },
-  { id: "demo-3", name: "Тренч", category: "Верх", brand: "Zara", color_hex: "#D8C8B0", season: "Весна", image_url: null, image_path: null, photo: null },
-  { id: "demo-4", name: "Прямые джинсы", category: "Низ", brand: "Levi's", color_hex: "#5B7DA8", season: "Всесезон", image_url: null, image_path: null, photo: null },
-  { id: "demo-5", name: "Базовые кроссовки", category: "Обувь", brand: "New Balance", color_hex: "#FFFFFF", season: "Всесезон", image_url: null, image_path: null, photo: null },
-  { id: "demo-6", name: "Структурированная сумка", category: "Аксессуары", brand: "A.P.C.", color_hex: "#8B5E3C", season: "Всесезон", image_url: null, image_path: null, photo: null },
-  { id: "demo-7", name: "Белый топ", category: "Верх", brand: "COS", color_hex: "#FFFFFF", season: "Лето", image_url: null, image_path: null, photo: null },
-  { id: "demo-8", name: "Мини-сумка", category: "Аксессуары", brand: "Polène", color_hex: "#2B2B2B", season: "Всесезон", image_url: null, image_path: null, photo: null },
+  { id: "demo-1", name: "Блейзер оверсайз", category: "Верх", brand: "Cos", color_hex: "#2B2B2B", season: "Всесезон", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo-1591040650555-53d3f0b5e33b?w=600&q=80" },
+  { id: "demo-2", name: "Белая рубашка", category: "Верх", brand: "Uniqlo", color_hex: "#FFFFFF", season: "Всесезон", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&q=80" },
+  { id: "demo-3", name: "Бежевый тренч", category: "Верх", brand: "Zara", color_hex: "#D8C8B0", season: "Весна", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo-1591040650594-73e96c0b5e3c?w=600&q=80" },
+  { id: "demo-4", name: "Прямые джинсы", category: "Низ", brand: "Levi's", color_hex: "#5B7DA8", season: "Всесезон", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo/1542272604-787c3835535d?w=600&q=80" },
+  { id: "demo-5", name: "Базовые кроссовки", category: "Обувь", brand: "New Balance", color_hex: "#FFFFFF", season: "Всесезон", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo-1549298916-b41d501d37fc?w=600&q=80" },
+  { id: "demo-6", name: "Структурированная сумка", category: "Аксессуары", brand: "A.P.C.", color_hex: "#8B5E3C", season: "Всесезон", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80" },
+  { id: "demo-7", name: "Белый топ", category: "Верх", brand: "COS", color_hex: "#FFFFFF", season: "Лето", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=80" },
+  { id: "demo-8", name: "Мини-сумка", category: "Аксессуары", brand: "Polène", color_hex: "#2B2B2B", season: "Всесезон", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo-1566150905458-1bf1fc083371?w=600&q=80" },
 ];
 
 function ensureDemoItems(): ClothingItem[] {
@@ -235,8 +235,20 @@ export async function deleteItem(item: ClothingItem) {
 }
 
 // ---------- outfits ----------
+const LOCAL_OUTFITS_KEY = "aura:local-outfits";
+
+function getLocalOutfits(): OutfitWithItems[] {
+  if (typeof window === "undefined") return [];
+  const raw = localStorage.getItem(LOCAL_OUTFITS_KEY);
+  return raw ? (JSON.parse(raw) as OutfitWithItems[]) : [];
+}
+
+function setLocalOutfits(outfits: OutfitWithItems[]) {
+  if (typeof window !== "undefined") localStorage.setItem(LOCAL_OUTFITS_KEY, JSON.stringify(outfits));
+}
+
 export async function fetchOutfits(): Promise<OutfitWithItems[]> {
-  if (isDemo()) return [];
+  if (isDemo()) return getLocalOutfits();
   await requireUserId();
   const outfits = check(await supabase.from("outfits").select("id,title,description,style,season,occasion,created_at").order("created_at", { ascending: false })) as Outfit[];
   if (!outfits.length) return [];
@@ -254,9 +266,26 @@ export async function fetchOutfit(id: string): Promise<OutfitWithItems | null> {
 export type OutfitInput = { title: string; style: string; season: string; occasion: string; description: string };
 
 export async function createOutfit(input: OutfitInput, itemIds: string[]): Promise<string> {
-  if (isDemo()) { if (!itemIds.length) throw new Error("Выберите хотя бы одну вещь"); return crypto.randomUUID(); }
-  const user_id = await requireUserId();
   if (!itemIds.length) throw new Error("Выберите хотя бы одну вещь");
+  if (isDemo()) {
+    const allItems = ensureDemoItems();
+    const selectedItems = itemIds.map((id) => allItems.find((i) => i.id === id)).filter((x): x is ClothingItem => !!x);
+    const id = crypto.randomUUID();
+    const outfit: OutfitWithItems = {
+      id,
+      title: input.title.trim() || "Новый образ",
+      description: input.description || null,
+      style: input.style || null,
+      season: input.season || null,
+      occasion: input.occasion || null,
+      created_at: new Date().toISOString(),
+      items: selectedItems,
+    };
+    const outfits = getLocalOutfits();
+    setLocalOutfits([outfit, ...outfits]);
+    return id;
+  }
+  const user_id = await requireUserId();
   const row = check(await supabase.from("outfits").insert({ ...input, title: input.title.trim() || "Новый образ", user_id }).select("id").single()) as { id: string };
   const res = await supabase.from("outfit_items").insert(itemIds.map((cid, position) => ({ outfit_id: row.id, clothing_item_id: cid, position })));
   if (res.error) { await supabase.from("outfits").delete().eq("id", row.id); throw new Error(dbError(res.error)); }
@@ -264,7 +293,7 @@ export async function createOutfit(input: OutfitInput, itemIds: string[]): Promi
 }
 
 export async function deleteOutfit(id: string) {
-  if (isDemo()) return;
+  if (isDemo()) { setLocalOutfits(getLocalOutfits().filter((o) => o.id !== id)); return; }
   check(await supabase.from("outfits").delete().eq("id", id));
 }
 
@@ -327,7 +356,8 @@ export async function updateProfile(patch: Partial<Pick<Profile, "display_name" 
 export async function fetchStats() {
   if (isDemo()) {
     const items = ensureDemoItems();
-    return { items: items.length, outfits: 0, favorites: 0 };
+    const outfits = getLocalOutfits();
+    return { items: items.length, outfits: outfits.length, favorites: 0 };
   }
   await requireUserId();
   const count = async (t: string, f?: [string, string]) => {

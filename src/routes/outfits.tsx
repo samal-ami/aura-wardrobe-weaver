@@ -13,7 +13,7 @@ export const Route = createFileRoute("/outfits")({
 function Outfits() {
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ["outfits"], queryFn: fetchOutfits });
   return (
-    <AppShell title="Образы" right={<Link to="/create" aria-label="Создать образ" className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground"><Plus size={20} /></Link>}>
+    <AppShell title="Образы" right={<div className="flex items-center gap-2"><Link to="/create" aria-label="Создать образ" className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground"><Plus size={20} /></Link></div>}>
       {isLoading ? <Spinner /> : error ? <ErrorNote text={(error as Error).message} onRetry={() => refetch()} /> :
         data!.length === 0 ? <Empty title="Нет образов" text="Соберите первый образ из вещей гардероба" action={<Link to="/create" className="btn-primary inline-block">Создать образ</Link>} /> :
         <div className="grid grid-cols-2 gap-4">{data!.map((o) => <OutfitCard key={o.id} outfit={o} />)}</div>}
