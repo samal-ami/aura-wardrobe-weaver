@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as HomeRouteImport } from './routes/home'
@@ -36,6 +37,11 @@ const AddRoute = AddRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreateRoute = CreateRouteImport.update({
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
   '/auth': typeof AuthRoute
+  '/community': typeof CommunityRoute
   '/create': typeof CreateRoute
   '/favorites': typeof FavoritesRoute
   '/home': typeof HomeRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
   '/auth': typeof AuthRoute
+  '/community': typeof CommunityRoute
   '/create': typeof CreateRoute
   '/favorites': typeof FavoritesRoute
   '/home': typeof HomeRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
   '/auth': typeof AuthRoute
+  '/community': typeof CommunityRoute
   '/create': typeof CreateRoute
   '/favorites': typeof FavoritesRoute
   '/home': typeof HomeRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/'
     | '/add'
     | '/auth'
+    | '/community'
     | '/create'
     | '/favorites'
     | '/home'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/'
     | '/add'
     | '/auth'
+    | '/community'
     | '/create'
     | '/favorites'
     | '/home'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/'
     | '/add'
     | '/auth'
+    | '/community'
     | '/create'
     | '/favorites'
     | '/home'
@@ -187,6 +199,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AddRoute: typeof AddRoute
   AuthRoute: typeof AuthRoute
+  CommunityRoute: typeof CommunityRoute
   CreateRoute: typeof CreateRoute
   FavoritesRoute: typeof FavoritesRoute
   HomeRoute: typeof HomeRoute
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/create': {
@@ -299,6 +319,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddRoute: AddRoute,
   AuthRoute: AuthRoute,
+  CommunityRoute: CommunityRoute,
   CreateRoute: CreateRoute,
   FavoritesRoute: FavoritesRoute,
   HomeRoute: HomeRoute,

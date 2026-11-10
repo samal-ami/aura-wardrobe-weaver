@@ -132,7 +132,14 @@ export function useSession() {
 
 // ---------- photos ----------
 export async function uploadPhoto(file: File, folder: "items" | "avatars"): Promise<string> {
-  if (isDemo()) return "";
+  if (isDemo()) {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error("Не удалось прочитать файл"));
+      reader.readAsDataURL(file);
+    });
+  }
   const uid = await requireUserId();
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
   const path = `${uid}/${folder}/${crypto.randomUUID()}.${ext}`;
@@ -155,24 +162,66 @@ async function withPhotos(items: ClothingItem[]): Promise<ClothingItem[]> {
   return items.map((i) => ({ ...i, photo: (i.image_path && urls[i.image_path]) || i.image_url || null }));
 }
 
+// ---------- local items (demo mode) ----------
+const LOCAL_ITEMS_KEY = "aura:local-items";
+
+function getLocalItems(): ClothingItem[] {
+  if (typeof window === "undefined") return [];
+  const raw = localStorage.getItem(LOCAL_ITEMS_KEY);
+  return raw ? (JSON.parse(raw) as ClothingItem[]) : null ?? [];
+}
+
+function setLocalItems(items: ClothingItem[]) {
+  if (typeof window !== "undefined") localStorage.setItem(LOCAL_ITEMS_KEY, JSON.stringify(items));
+}
+
+const DEMO_ITEMS: ClothingItem[] = [
+  { id: "demo-1", name: "Блейзер оверсайз", category: "Верх", brand: "Cos", color_hex: "#2B2B2B", season: "Всесезон", image_url: null, image_path: null, photo: null },
+  { id: "demo-2", name: "Белая рубашка", category: "Верх", brand: "Uniqlo", color_hex: "#FFFFFF", season: "Всесезон", image_url: null, image_path: null, photo: null },
+  { id: "demo-3", name: "Тренч", category: "Верх", brand: "Zara", color_hex: "#D8C8B0", season: "Весна", image_url: null, image_path: null, photo: null },
+  { id: "demo-4", name: "Прямые джинсы", category: "Низ", brand: "Levi's", color_hex: "#5B7DA8", season: "Всесезон", image_url: null, image_path: null, photo: null },
+  { id: "demo-5", name: "Базовые кроссовки", category: "Обувь", brand: "New Balance", color_hex: "#FFFFFF", season: "Всесезон", image_url: null, image_path: null, photo: null },
+  { id: "demo-6", name: "Структурированная сумка", category: "Аксессуары", brand: "A.P.C.", color_hex: "#8B5E3C", season: "Всесезон", image_url: null, image_path: null, photo: null },
+  { id: "demo-7", name: "Белый топ", category: "Верх", brand: "COS", color_hex: "#FFFFFF", season: "Лето", image_url: null, image_path: null, photo: null },
+  { id: "demo-8", name: "Мини-сумка", category: "Аксессуары", brand: "Polène", color_hex: "#2B2B2B", season: "Всесезон", image_url: null, image_path: null, photo: null },
+];
+
+function ensureDemoItems(): ClothingItem[] {
+  let items = getLocalItems();
+  if (items.length === 0) {
+    items = DEMO_ITEMS;
+    setLocalItems(items);
+  }
+  return items;
+}
+
 // ---------- clothing items ----------
 export async function fetchItems(): Promise<ClothingItem[]> {
-  if (isDemo()) return [];
+  if (isDemo()) return ensureDemoItems();
   await requireUserId();
   const data = check(await supabase.from("clothing_items").select("*").order("created_at", { ascending: false }));
   return withPhotos((data ?? []) as ClothingItem[]);
 }
 
 export async function fetchItem(id: string): Promise<ClothingItem | null> {
-  if (isDemo()) return null;
+  if (isDemo()) { const items = ensureDemoItems(); return items.find((i) => i.id === id) ?? null; }
   const data = check(await supabase.from("clothing_items").select("*").eq("id", id).maybeSingle());
   return data ? (await withPhotos([data as ClothingItem]))[0] ?? null : null;
 }
 
-export type ItemInput = { name: string; category: string; brand: string; color_hex: string; season: string; notes: string; image_path?: string | null };
+export type ItemInput = { name: string; category: string; brand: string; color_hex: string; season: string; notes: string; image_path?: string | null; photo?: string | null };
 
 export async function saveItem(input: ItemInput, id?: string) {
-  if (isDemo()) return;
+  if (isDemo()) {
+    const items = ensureDemoItems();
+    if (id) {
+      setLocalItems(items.map((i) => (i.id === id ? { ...i, ...input } : i)));
+    } else {
+      const newItem: ClothingItem = { id: crypto.randomUUID(), user_id: DEMO_USER_ID, ...input, image_path: input.image_path ?? null, photo: input.photo ?? null };
+      setLocalItems([newItem, ...items]);
+    }
+    return;
+  }
   const user_id = await requireUserId();
   const row = { ...input, brand: input.brand || null, notes: input.notes || null, season: input.season || null, updated_at: new Date().toISOString() };
   if (id) check(await supabase.from("clothing_items").update(row).eq("id", id));
@@ -180,7 +229,7 @@ export async function saveItem(input: ItemInput, id?: string) {
 }
 
 export async function deleteItem(item: ClothingItem) {
-  if (isDemo()) return;
+  if (isDemo()) { setLocalItems(getLocalItems().filter((i) => i.id !== item.id)); return; }
   check(await supabase.from("clothing_items").delete().eq("id", item.id));
   if (item.image_path) await supabase.storage.from(BUCKET).remove([item.image_path]);
 }
@@ -235,9 +284,25 @@ export async function setFavorite(type: "outfit" | "item", id: string, on: boole
 }
 
 // ---------- profile / prefs / settings ----------
+const DEMO_PROFILE_KEY = "aura:demo-profile";
+
+function getDemoProfile(): Profile {
+  if (typeof window === "undefined") return { id: DEMO_USER_ID, display_name: "Asemay", status: "Демо-режим ✨", avatar_url: null, avatar: null };
+  const raw = localStorage.getItem(DEMO_PROFILE_KEY);
+  if (raw) return JSON.parse(raw) as Profile;
+  return { id: DEMO_USER_ID, display_name: "Asemay", status: "Демо-режим ✨", avatar_url: null, avatar: null };
+}
+
+function setDemoProfile(p: Profile) {
+  if (typeof window !== "undefined") localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(p));
+}
+
 export async function fetchProfile(): Promise<Profile> {
   const demo = demoUser();
-  if (demo) return { id: demo.id, display_name: demo.name, status: "Демо-режим ✨", avatar_url: null, avatar: null };
+  if (demo) {
+    const p = getDemoProfile();
+    return { ...p, display_name: p.display_name || demo.name, avatar: p.avatar_url };
+  }
   const uid = await requireUserId();
   let p = check(await supabase.from("profiles").select("id,display_name,status,avatar_url").eq("id", uid).maybeSingle()) as Profile | null;
   if (!p) {
@@ -250,13 +315,20 @@ export async function fetchProfile(): Promise<Profile> {
 }
 
 export async function updateProfile(patch: Partial<Pick<Profile, "display_name" | "status" | "avatar_url">>) {
-  if (isDemo()) return;
+  if (isDemo()) {
+    const cur = getDemoProfile();
+    setDemoProfile({ ...cur, ...patch, avatar: patch.avatar_url ?? cur.avatar });
+    return;
+  }
   const id = await requireUserId();
   check(await supabase.from("profiles").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id));
 }
 
 export async function fetchStats() {
-  if (isDemo()) return { items: 0, outfits: 0, favorites: 0 };
+  if (isDemo()) {
+    const items = ensureDemoItems();
+    return { items: items.length, outfits: 0, favorites: 0 };
+  }
   await requireUserId();
   const count = async (t: string, f?: [string, string]) => {
     let q = supabase.from(t).select("*", { count: "exact", head: true });

@@ -52,7 +52,8 @@ function ItemForm({ id, item }: { id?: string | undefined; item: Awaited<ReturnT
     setBusy(true); setMsg("");
     try {
       const image_path = file ? await uploadPhoto(file, "items") : item?.image_path ?? null;
-      await saveItem({ name: name.trim(), category, color_hex: color, season, brand: brand.trim(), notes: notes.trim(), image_path }, id);
+      const photo = typeof image_path === "string" && image_path.startsWith("data:") ? image_path : item?.photo ?? null;
+      await saveItem({ name: name.trim(), category, color_hex: color, season, brand: brand.trim(), notes: notes.trim(), image_path, photo }, id);
       await qc.invalidateQueries();
       toast.success("Успешно сохранено!");
       void nav({ to: "/wardrobe" });

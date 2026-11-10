@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ChevronRight, Shirt, Sparkles, Heart, Settings, SlidersHorizontal, Camera, Pencil, UserRound } from "lucide-react";
+import { ChevronRight, Shirt, Sparkles, Heart, Settings, SlidersHorizontal, Camera, Pencil, UserRound, Users } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ErrorNote, Spinner } from "@/components/AppShell";
-import { fetchProfile, fetchStats, updateProfile, uploadPhoto } from "@/lib/supabase";
+import { fetchProfile, fetchStats, updateProfile } from "@/lib/supabase";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "AURA — Профиль" }, { name: "description", content: "Ваш профиль в AURA" }, { property: "og:title", content: "AURA — Профиль" }, { property: "og:description", content: "Ваш профиль в AURA" }] }),
@@ -15,6 +15,7 @@ const menu = [
   { label: "Мой гардероб", to: "/wardrobe", icon: Shirt },
   { label: "Мои образы", to: "/outfits", icon: Sparkles },
   { label: "Избранное", to: "/favorites", icon: Heart },
+  { label: "Сообщество", to: "/community", icon: Users },
   { label: "Мои предпочтения", to: "/preferences", icon: SlidersHorizontal },
   { label: "Настройки", to: "/settings", icon: Settings },
 ] as const;
@@ -29,7 +30,18 @@ function Profile() {
 
   async function onAvatar(f?: File) {
     if (!f) return;
-    try { const path = await uploadPhoto(f, "avatars"); await updateProfile({ avatar_url: path }); await qc.invalidateQueries({ queryKey: ["profile"] }); toast.success("Фото обновлено"); }
+    if (!f.type.startsWith("image/")) { toast.error("Выберите изображение"); return; }
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Не удалось прочитать файл"));
+        reader.readAsDataURL(f);
+      });
+      await updateProfile({ avatar_url: base64 });
+      await qc.invalidateQueries({ queryKey: ["profile"] });
+      toast.success("Фото обновлено");
+    }
     catch (e) { toast.error((e as Error).message); }
   }
   async function saveInfo() {

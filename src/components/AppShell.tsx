@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
-import { Home, Shirt, Plus, Sparkles, User, ChevronLeft, Loader2 } from "lucide-react";
+import { Home, Shirt, Plus, Sparkles, ChevronLeft, Loader2, Users } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 import { useSession } from "@/lib/supabase";
 
@@ -65,18 +65,18 @@ export function AppShell({ title, children, right, back }: { title?: string; chi
 }
 
 function BottomNav() {
-  const item = "flex flex-col items-center gap-1 text-[11px] text-muted-foreground";
-  const active = { className: "text-foreground" };
+  const baseItem = "flex flex-col items-center gap-1 text-[11px] text-muted-foreground transition-colors";
+  const activeItem = "text-foreground font-medium";
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-card px-4 pt-2 pb-5">
       <div className="flex items-end justify-between">
-        <Link to="/home" className={item} activeProps={active}><Home size={22} />Главная</Link>
-        <Link to="/wardrobe" className={item} activeProps={active}><Shirt size={22} />Гардероб</Link>
+        <Link to="/home" className={baseItem} activeProps={{ className: activeItem }}><Home size={22} />Главная</Link>
+        <Link to="/wardrobe" className={baseItem} activeProps={{ className: activeItem }}><Shirt size={22} />Гардероб</Link>
         <Link to="/add" aria-label="Добавить" className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-soft transition active:scale-95">
           <Plus size={26} />
         </Link>
-        <Link to="/outfits" className={item} activeProps={active}><Sparkles size={22} />Образы</Link>
-        <Link to="/profile" className={item} activeProps={active}><User size={22} />Профиль</Link>
+        <Link to="/outfits" className={baseItem} activeProps={{ className: activeItem }}><Sparkles size={22} />Образы</Link>
+        <Link to="/community" className={baseItem} activeProps={{ className: activeItem }}><Users size={22} />Сообщество</Link>
       </div>
     </nav>
   );
