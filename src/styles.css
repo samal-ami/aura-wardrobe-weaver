@@ -84,5 +84,9 @@
   padding: 1rem;
   font-weight: 600;
   box-shadow: var(--shadow-soft);
+  transition-property: transform, background-color, filter;
+  transition-duration: 200ms;
+  &:hover { filter: brightness(0.96); }
+  &:active { transform: scale(0.97); }
   &:disabled { opacity: 0.6; }
 }

@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell, Empty, ErrorNote, Spinner } from "@/components/AppShell";
 import { OutfitCard } from "@/components/OutfitCard";
+import { CapsuleSection } from "@/components/CapsuleSection";
 import { fetchOutfits, fetchProfile } from "@/lib/supabase";
 import look from "@/assets/look.jpg";
 
@@ -24,7 +25,10 @@ function Home() {
           <Link to="/create" className="mt-4 inline-block rounded-[20px] bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">Собрать образ</Link>
         </div>
       </section>
-      <div className="mt-8 mb-4 flex items-baseline justify-between">
+      <div className="mt-8">
+        <CapsuleSection />
+      </div>
+      <div className="mt-10 mb-4 flex items-baseline justify-between">
         <h3 className="font-serif text-2xl">Мои последние образы</h3>
         <Link to="/outfits" className="text-sm text-muted-foreground">Все</Link>
       </div>

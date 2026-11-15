@@ -76,8 +76,8 @@ function HeaderAvatar() {
 }
 
 function BottomNav() {
-  const baseItem = "flex flex-col items-center gap-1 text-[11px] text-muted-foreground transition-colors";
-  const activeItem = "text-foreground font-medium";
+  const baseItem = "flex flex-col items-center gap-1 rounded-2xl px-3 py-1.5 text-[11px] text-muted-foreground transition-colors duration-200 active:scale-95";
+  const activeItem = "bg-[#1A1A1A] font-medium text-white";
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-card px-4 pt-2 pb-5">
       <div className="flex items-end justify-between">
@@ -95,7 +95,7 @@ function BottomNav() {
 
 export function Chip({ active, children, onClick }: { active?: boolean | undefined; children: ReactNode; onClick?: (() => void) | undefined }) {
   return (
-    <button type="button" aria-pressed={!!active} onClick={onClick} className={`whitespace-nowrap rounded-full px-4 py-2 text-sm transition active:scale-95 ${active ? "bg-primary text-primary-foreground" : "bg-card text-foreground"}`}>
+    <button type="button" aria-pressed={!!active} onClick={onClick} className={`whitespace-nowrap rounded-full px-4 py-2 text-sm transition-colors duration-200 active:scale-95 ${active ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary"}`}>
       {children}
     </button>
   );
