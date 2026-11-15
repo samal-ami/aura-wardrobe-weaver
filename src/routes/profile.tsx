@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ChevronRight, Shirt, Sparkles, Heart, Settings, SlidersHorizontal, Camera, Pencil, UserRound, Users } from "lucide-react";
+import { ChevronRight, Shirt, Sparkles, Heart, Settings, SlidersHorizontal, Camera, Pencil, UserRound, Users, Wand2, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ErrorNote, Spinner } from "@/components/AppShell";
 import { fetchProfile, fetchStats, updateProfile } from "@/lib/supabase";
@@ -12,6 +12,8 @@ export const Route = createFileRoute("/profile")({
 });
 
 const menu = [
+  { label: "AI Стилист", to: "/stylist", icon: Wand2 },
+  { label: "Проверка покупки", to: "/shopping", icon: ShoppingBag },
   { label: "Мой гардероб", to: "/wardrobe", icon: Shirt },
   { label: "Мои образы", to: "/outfits", icon: Sparkles },
   { label: "Избранное", to: "/favorites", icon: Heart },

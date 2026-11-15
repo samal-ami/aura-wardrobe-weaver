@@ -21,6 +21,8 @@ import { Route as PreferencesRouteImport } from './routes/preferences'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ShoppingRouteImport } from './routes/shopping'
+import { Route as StylistRouteImport } from './routes/stylist'
 import { Route as WardrobeRouteImport } from './routes/wardrobe'
 import { Route as OutfitIdRouteImport } from './routes/outfit.$id'
 
@@ -84,6 +86,16 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShoppingRoute = ShoppingRouteImport.update({
+  id: '/shopping',
+  path: '/shopping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StylistRoute = StylistRouteImport.update({
+  id: '/stylist',
+  path: '/stylist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WardrobeRoute = WardrobeRouteImport.update({
   id: '/wardrobe',
   path: '/wardrobe',
@@ -108,6 +120,8 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/shopping': typeof ShoppingRoute
+  '/stylist': typeof StylistRoute
   '/wardrobe': typeof WardrobeRoute
   '/outfit/$id': typeof OutfitIdRoute
 }
@@ -124,6 +138,8 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/shopping': typeof ShoppingRoute
+  '/stylist': typeof StylistRoute
   '/wardrobe': typeof WardrobeRoute
   '/outfit/$id': typeof OutfitIdRoute
 }
@@ -141,6 +157,8 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/shopping': typeof ShoppingRoute
+  '/stylist': typeof StylistRoute
   '/wardrobe': typeof WardrobeRoute
   '/outfit/$id': typeof OutfitIdRoute
 }
@@ -159,6 +177,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/settings'
+    | '/shopping'
+    | '/stylist'
     | '/wardrobe'
     | '/outfit/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +195,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/settings'
+    | '/shopping'
+    | '/stylist'
     | '/wardrobe'
     | '/outfit/$id'
   id:
@@ -191,6 +213,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/settings'
+    | '/shopping'
+    | '/stylist'
     | '/wardrobe'
     | '/outfit/$id'
   fileRoutesById: FileRoutesById
@@ -208,6 +232,8 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
+  ShoppingRoute: typeof ShoppingRoute
+  StylistRoute: typeof StylistRoute
   WardrobeRoute: typeof WardrobeRoute
   OutfitIdRoute: typeof OutfitIdRoute
 }
@@ -298,6 +324,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shopping': {
+      id: '/shopping'
+      path: '/shopping'
+      fullPath: '/shopping'
+      preLoaderRoute: typeof ShoppingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stylist': {
+      id: '/stylist'
+      path: '/stylist'
+      fullPath: '/stylist'
+      preLoaderRoute: typeof StylistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wardrobe': {
       id: '/wardrobe'
       path: '/wardrobe'
@@ -328,6 +368,8 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
+  ShoppingRoute: ShoppingRoute,
+  StylistRoute: StylistRoute,
   WardrobeRoute: WardrobeRoute,
   OutfitIdRoute: OutfitIdRoute,
 }
