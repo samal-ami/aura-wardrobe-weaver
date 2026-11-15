@@ -1,5 +1,13 @@
 import { createClient, type Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
+import itemBlazer from "@/assets/item-blazer.jpg";
+import itemJeans from "@/assets/item-jeans.jpg";
+import itemLoafers from "@/assets/item-loafers.jpg";
+import itemBag from "@/assets/item-bag.jpg";
+import itemTee from "@/assets/item-tee.jpg";
+
+const shirtPhoto = "https://images.pexels.com/photos/6276012/pexels-photo-6276012.jpeg?auto=compress&cs=tinysrgb&h=650&w=940";
+const trenchPhoto = "https://images.pexels.com/photos/4456724/pexels-photo-4456724.jpeg?auto=compress&cs=tinysrgb&h=650&w=940";
 
 const URL = "https://kjkfqovwsppbgahzgkgx.supabase.co";
 const KEY = "sb_publishable__dGeuURiWQfd-SYDSljwPw_AIpAT3z9";
@@ -168,7 +176,7 @@ const LOCAL_ITEMS_KEY = "aura:local-items";
 function getLocalItems(): ClothingItem[] {
   if (typeof window === "undefined") return [];
   const raw = localStorage.getItem(LOCAL_ITEMS_KEY);
-  return raw ? (JSON.parse(raw) as ClothingItem[]) : null ?? [];
+  return raw ? (JSON.parse(raw) as ClothingItem[]) : [];
 }
 
 function setLocalItems(items: ClothingItem[]) {
@@ -176,23 +184,28 @@ function setLocalItems(items: ClothingItem[]) {
 }
 
 const DEMO_ITEMS: ClothingItem[] = [
-  { id: "demo-1", name: "Блейзер оверсайз", category: "Верх", brand: "Cos", color_hex: "#2B2B2B", season: "Всесезон", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo-1591040650555-53d3f0b5e33b?w=600&q=80" },
-  { id: "demo-2", name: "Белая рубашка", category: "Верх", brand: "Uniqlo", color_hex: "#FFFFFF", season: "Всесезон", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&q=80" },
-  { id: "demo-3", name: "Бежевый тренч", category: "Верх", brand: "Zara", color_hex: "#D8C8B0", season: "Весна", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo-1591040650594-73e96c0b5e3c?w=600&q=80" },
-  { id: "demo-4", name: "Прямые джинсы", category: "Низ", brand: "Levi's", color_hex: "#5B7DA8", season: "Всесезон", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo/1542272604-787c3835535d?w=600&q=80" },
-  { id: "demo-5", name: "Базовые кроссовки", category: "Обувь", brand: "New Balance", color_hex: "#FFFFFF", season: "Всесезон", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo-1549298916-b41d501d37fc?w=600&q=80" },
-  { id: "demo-6", name: "Структурированная сумка", category: "Аксессуары", brand: "A.P.C.", color_hex: "#8B5E3C", season: "Всесезон", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80" },
-  { id: "demo-7", name: "Белый топ", category: "Верх", brand: "COS", color_hex: "#FFFFFF", season: "Лето", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=80" },
-  { id: "demo-8", name: "Мини-сумка", category: "Аксессуары", brand: "Polène", color_hex: "#2B2B2B", season: "Всесезон", image_url: null, image_path: null, photo: "https://images.unsplash.com/photo-1566150905458-1bf1fc083371?w=600&q=80" },
+  { id: "demo-1", name: "Блейзер оверсайз", category: "Верх", brand: "Cos", color_hex: "#2B2B2B", season: "Всесезон", image_url: itemBlazer, image_path: null, photo: itemBlazer },
+  { id: "demo-2", name: "Белая рубашка", category: "Верх", brand: "Uniqlo", color_hex: "#FFFFFF", season: "Всесезон", image_url: shirtPhoto, image_path: null, photo: shirtPhoto },
+  { id: "demo-3", name: "Бежевый тренч", category: "Верх", brand: "Zara", color_hex: "#D8C8B0", season: "Весна", image_url: trenchPhoto, image_path: null, photo: trenchPhoto },
+  { id: "demo-4", name: "Прямые джинсы", category: "Низ", brand: "Levi's", color_hex: "#5B7DA8", season: "Всесезон", image_url: itemJeans, image_path: null, photo: itemJeans },
+  { id: "demo-5", name: "Лоферы", category: "Обувь", brand: "New Balance", color_hex: "#FFFFFF", season: "Всесезон", image_url: itemLoafers, image_path: null, photo: itemLoafers },
+  { id: "demo-6", name: "Структурированная сумка", category: "Аксессуары", brand: "A.P.C.", color_hex: "#8B5E3C", season: "Всесезон", image_url: itemBag, image_path: null, photo: itemBag },
+  { id: "demo-7", name: "Белый топ", category: "Верх", brand: "COS", color_hex: "#FFFFFF", season: "Лето", image_url: itemTee, image_path: null, photo: itemTee },
+  { id: "demo-8", name: "Мини-сумка", category: "Аксессуары", brand: "Polène", color_hex: "#2B2B2B", season: "Всесезон", image_url: itemBag, image_path: null, photo: itemBag },
 ];
 
 function ensureDemoItems(): ClothingItem[] {
-  let items = getLocalItems();
-  if (items.length === 0) {
-    items = DEMO_ITEMS;
-    setLocalItems(items);
+  const stored = getLocalItems();
+  if (stored.length === 0) {
+    setLocalItems(DEMO_ITEMS);
+    return DEMO_ITEMS;
   }
-  return items;
+  const refreshed: ClothingItem[] = stored.map((i) => {
+    const seed = DEMO_ITEMS.find((d) => d.id === i.id);
+    return seed ? { ...i, photo: seed.photo ?? null, image_url: seed.image_url ?? null } : i;
+  });
+  setLocalItems(refreshed);
+  return refreshed;
 }
 
 // ---------- clothing items ----------
@@ -346,7 +359,7 @@ export async function fetchProfile(): Promise<Profile> {
 export async function updateProfile(patch: Partial<Pick<Profile, "display_name" | "status" | "avatar_url">>) {
   if (isDemo()) {
     const cur = getDemoProfile();
-    setDemoProfile({ ...cur, ...patch, avatar: patch.avatar_url ?? cur.avatar });
+    setDemoProfile({ ...cur, ...patch, avatar: patch.avatar_url ?? cur.avatar ?? null });
     return;
   }
   const id = await requireUserId();

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, Chip, Empty, ErrorNote, ItemTile, Spinner } from "@/components/AppShell";
-import { SEASONS, createOutfit, fetchItems } from "@/lib/supabase";
+import { CATEGORIES, SEASONS, createOutfit, fetchItems } from "@/lib/supabase";
 
 export const Route = createFileRoute("/create")({
   head: () => ({ meta: [{ title: "AURA — Создать образ" }, { name: "description", content: "Соберите новый образ из гардероба" }, { property: "og:title", content: "AURA — Создать образ" }, { property: "og:description", content: "Соберите новый образ из гардероба" }] }),
@@ -41,8 +41,7 @@ function CreateOutfit() {
 
   const query = search.trim().toLowerCase();
   const filtered = (items ?? []).filter((i) => `${i.name} ${i.brand ?? ""}`.toLowerCase().includes(query));
-  const clothes = filtered.filter((i) => i.category !== "Аксессуары");
-  const acc = filtered.filter((i) => i.category === "Аксессуары");
+  const groups = CATEGORIES.map((c) => ({ category: c, list: filtered.filter((i) => i.category === c) })).filter((g) => g.list.length > 0);
 
   return (
     <AppShell title="Создать образ" back>
@@ -57,20 +56,19 @@ function CreateOutfit() {
             <div className="-mx-6 mt-3 flex gap-2 overflow-x-auto px-6">{STYLES.map((s) => <Chip key={s} active={style === s} onClick={one(s, setStyle, style)}>{s}</Chip>)}</div>
             <div className="-mx-6 mt-2 flex gap-2 overflow-x-auto px-6">{SEASONS.map((s) => <Chip key={s} active={season === s} onClick={one(s, setSeason, season)}>{s}</Chip>)}</div>
             <div className="-mx-6 mt-2 flex gap-2 overflow-x-auto px-6">{OCCASIONS.map((s) => <Chip key={s} active={occasion === s} onClick={one(s, setOccasion, occasion)}>{s}</Chip>)}</div>
-            <h3 className="mt-6 mb-3 font-serif text-2xl">Одежда и обувь</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {clothes.map((i) => <ItemTile key={i.id} name={i.name} brand={i.brand} color={i.color_hex} image={i.photo} selected={sel.includes(i.id)} onClick={() => toggle(i.id)} />)}
-            </div>
-            <h3 className="mt-7 mb-3 font-serif text-2xl">Аксессуары</h3>
-            <div className="rounded-[20px] bg-accent p-4">
-              <div className="grid grid-cols-3 gap-3">
-                {acc.map((i) => <ItemTile key={i.id} name={i.name} brand={i.brand} color={i.color_hex} image={i.photo} selected={sel.includes(i.id)} onClick={() => toggle(i.id)} />)}
-                {acc.length === 0 && <p className="col-span-3 text-sm text-accent-foreground">Добавьте аксессуары в гардероб</p>}
-              </div>
-            </div>
+            {groups.length === 0 && <p className="mt-10 text-center text-muted-foreground">Ничего не найдено</p>}
+            {groups.map((g) => (
+              <section key={g.category}>
+                <h3 className="mt-6 mb-3 font-serif text-2xl">{g.category}</h3>
+                <div className="grid grid-cols-3 gap-3">
+                  {g.list.map((i) => <ItemTile key={i.id} name={i.name} brand={i.brand} color={i.color_hex} image={i.photo} selected={sel.includes(i.id)} onClick={() => toggle(i.id)} />)}
+                </div>
+              </section>
+            ))}
             <button className="btn-primary mt-6" disabled={sel.length === 0 || busy} onClick={save}>{busy ? "Сохранение…" : `Сохранить образ (${sel.length})`}</button>
           </>
         )}
     </AppShell>
   );
 }
+
