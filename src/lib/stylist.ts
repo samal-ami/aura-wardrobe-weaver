@@ -1,7 +1,9 @@
 import { isNeutral, colorsCompatible } from "@/lib/color";
 import type { ClothingItem } from "@/lib/supabase";
+import type { MessageKey } from "@/lib/i18n/ru";
+import type { Translate } from "@/lib/i18n";
 
-export const WEATHER_OPTIONS = ["Солнечно", "Прохладно", "Дождь", "Холодно"] as const;
+export const WEATHER_OPTIONS = ["sunny", "cool", "rain", "cold"] as const;
 export type Weather = (typeof WEATHER_OPTIONS)[number];
 
 export type StylistReply = { text: string; outfits?: ClothingItem[][] };
@@ -11,25 +13,9 @@ const colorOf = (i: ClothingItem) => i.color_hex ?? "#808080";
 const isOuter = (i: ClothingItem) => i.category === "Верх" && OUTER_RE.test(i.name);
 const byCategory = (items: ClothingItem[], category: string) => items.filter((i) => i.category === category);
 
-const WEATHER_TIPS: Record<Weather, string> = {
-  Солнечно: "Тепло и солнечно: берите лёгкие ткани, шёлк и хлопок, свободный крой и светлую палитру.",
-  Прохладно: "Прохладно: лучше всего работают слои. Тонкий верхний слой, например тренч или кардиган, поверх базового топа.",
-  Дождь: "Дождь: выбирайте тренч и обувь, которую не жалко намочить. Лоферы и кроссовки из гладкой кожи практичнее замши.",
-  Холодно: "Холодно: добавьте объём и плотные материалы, шерсть и кашемир. Тонкие ткани оставьте для слоёв под верхом.",
-};
-
-const COLOR_TIP =
-  "Палитра: держитесь двух-трёх цветов. Нейтральные тона (белый, бежевый, графит, деним) сочетаются почти со всем, а один акцентный цвет делает образ живым.";
-const SILHOUETTE_TIP =
-  "Силуэт: оверсайз сверху уравновешивайте прямыми джинсами или брюками. Объёмный верх с объёмным низом выглядит случайно.";
-const SHOES_TIP =
-  "Обувь: лоферы и белые кроссовки подходят почти к любому образу. Туфли-лодочки на низком каблуке помогут сделать вечерний look.";
-const KOREAN_TIP =
-  "Корейский минимализм: монохром, мягкие оттенки и чистые линии. Один крупный предмет, например оверсайз блейзер, и всё остальное спокойное.";
-const FRENCH_TIP =
-  "Французский шик: тренч, шёлковый топ и лоферы. Немного небрежности в деталях, например слегка расстёгнутый верх, важнее идеальной формы.";
-const AMERICAN_TIP =
-  "Американский casual: прямые джинсы, кардиган и кроссовки. Комфорт и опрятность важнее логотипов.";
+export function weatherLabel(weather: Weather, t: Translate): string {
+  return t(`weather.${weather}` as MessageKey);
+}
 
 export function buildOutfits(items: ClothingItem[], weather: Weather, limit = 3): ClothingItem[][] {
   const tops = byCategory(items, "Верх").filter((i) => !isOuter(i));
@@ -37,7 +23,7 @@ export function buildOutfits(items: ClothingItem[], weather: Weather, limit = 3)
   const bottoms = byCategory(items, "Низ");
   const shoes = byCategory(items, "Обувь");
   const accessories = byCategory(items, "Аксессуары");
-  const cold = weather !== "Солнечно";
+  const cold = weather !== "sunny";
   const result: ClothingItem[][] = [];
   const seen = new Set<string>();
 
@@ -69,58 +55,45 @@ export function describeOutfit(outfit: ClothingItem[]): string {
   return outfit.map((i) => i.name).join(" + ");
 }
 
-function adviceOnItem(item: ClothingItem, items: ClothingItem[]): string {
+function adviceOnItem(item: ClothingItem, items: ClothingItem[], t: Translate): string {
   const partners = items.filter((i) => i.id !== item.id && i.category !== item.category && colorsCompatible(colorOf(item), colorOf(i)));
-  const tone = isNeutral(colorOf(item))
-    ? "Это нейтральная вещь, поэтому её легко сочетать."
-    : "Это яркий акцент, поэтому рядом лучше оставить спокойные нейтральные вещи.";
-  if (partners.length === 0) {
-    return `«${item.name}». ${tone} В гардеробе пока нет вещей, которые бы с ней хорошо сочетались. Добавьте нейтральный низ или верх, и образ сложится.`;
-  }
+  const tone = t(isNeutral(colorOf(item)) ? "stylist.itemNeutral" : "stylist.itemAccent");
+  if (partners.length === 0) return `«${item.name}». ${t("stylist.itemNoPartners", { tone })}`;
   const names = partners.slice(0, 4).map((i) => `«${i.name}»`).join(", ");
-  return `«${item.name}». ${tone} Хорошо сочетается с: ${names}. ${SILHOUETTE_TIP}`;
+  return `«${item.name}». ${t("stylist.itemPartners", { tone, names, silhouette: t("tip.silhouette") })}`;
 }
 
-export function replyTo(message: string, items: ClothingItem[], weather: Weather): StylistReply {
-  if (items.length === 0) {
-    return { text: "В гардеробе пока нет вещей. Добавьте хотя бы верх, низ и обувь, и я смогу собирать образы." };
-  }
+export function replyTo(message: string, items: ClothingItem[], weather: Weather, t: Translate): StylistReply {
+  if (items.length === 0) return { text: t("stylist.noItems") };
   const q = message.toLowerCase();
+  const weatherName = weatherLabel(weather, t);
 
-  if (/надеть|сегодня|одеться/.test(q)) {
+  if (/надеть|сегодня|одеться|today|wear|бүгін|киейін/.test(q)) {
     const outfits = buildOutfits(items, weather, 2);
-    const tail = outfits.length > 0
-      ? " Вот два образа из вашего гардероба."
-      : " Из текущих вещей не нашлось сочетающихся комплектов. Добавьте низ или обувь.";
-    return { text: `Сегодня: ${weather.toLowerCase()}. ${WEATHER_TIPS[weather]}${tail}`, outfits };
+    const key = outfits.length > 0 ? "stylist.todayOk" : "stylist.todayNone";
+    return { text: t(key, { weather: weatherName, tip: t(`tip.${weather}` as MessageKey) }), outfits };
   }
 
-  if (/собер|образ|комплект|скомбин/.test(q)) {
+  if (/собер|образ|комплект|скомбин|outfit|build|look/.test(q)) {
     const outfits = buildOutfits(items, weather, 3);
-    if (outfits.length === 0) {
-      return { text: "Не нашла сочетающихся комплектов. Попробуйте добавить нижнюю часть или обувь в нейтральном цвете." };
-    }
-    return { text: `Собрала образы с учётом погоды (${weather.toLowerCase()}). Цвета подобраны так, чтобы сочетались между собой.`, outfits };
+    if (outfits.length === 0) return { text: t("stylist.buildNone") };
+    return { text: t("stylist.buildOk", { weather: weatherName }), outfits };
   }
 
   const mentioned = items.find((i) => q.includes(i.name.toLowerCase()) || (i.brand ? q.includes(i.brand.toLowerCase()) : false));
-  if (mentioned) return { text: adviceOnItem(mentioned, items) };
+  if (mentioned) return { text: adviceOnItem(mentioned, items, t) };
 
-  if (/корей|миними/.test(q)) return { text: KOREAN_TIP };
-  if (/француз|парижск|шик/.test(q)) return { text: FRENCH_TIP };
-  if (/америк|casual|кэжуал|кежуал/.test(q)) return { text: AMERICAN_TIP };
-  if (/обув|туфл|кроссов|лофер/.test(q)) return { text: SHOES_TIP };
-  if (/цвет|палитр|сочета/.test(q)) return { text: COLOR_TIP };
-  if (/погод|дожд|холод|жар|тепл/.test(q)) return { text: WEATHER_TIPS[weather] };
-  if (/стил|совет/.test(q)) return { text: `${COLOR_TIP} ${SILHOUETTE_TIP}` };
+  if (/корей|миними|korean|minimal/.test(q)) return { text: t("tip.korean") };
+  if (/француз|парижск|шик|french|paris/.test(q)) return { text: t("tip.french") };
+  if (/америк|casual|кэжуал|кежуал|american/.test(q)) return { text: t("tip.american") };
+  if (/обув|туфл|кроссов|лофер|shoe|sneaker|loafer/.test(q)) return { text: t("tip.shoes") };
+  if (/цвет|палитр|сочета|colou?r|palette/.test(q)) return { text: t("tip.color") };
+  if (/погод|дожд|холод|жар|тепл|weather|rain|cold|warm/.test(q)) return { text: t(`tip.${weather}` as MessageKey) };
+  if (/стил|совет|style|advice/.test(q)) return { text: `${t("tip.color")} ${t("tip.silhouette")}` };
 
-  return {
-    text: "Расскажите, что вас интересует: вещь из гардероба, цвета, погода или повод. Можно также нажать одну из быстрых подсказок ниже.",
-  };
+  return { text: t("stylist.fallback") };
 }
 
-export function photoReply(): StylistReply {
-  return {
-    text: "Фото получено. Я не распознаю вещь по картинке, поэтому назовите её в сообщении и укажите цвет. Тогда я сравню её с вашим гардеробом.",
-  };
+export function photoReply(t: Translate): StylistReply {
+  return { text: t("stylist.photoReply") };
 }

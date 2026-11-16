@@ -3,14 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ImagePlus, Send, X } from "lucide-react";
 import { AppShell, Chip, Spinner, ErrorNote } from "@/components/AppShell";
+import { useI18n } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/i18n/ru";
 import { fetchItems } from "@/lib/supabase";
-import { WEATHER_OPTIONS, buildOutfits, describeOutfit, photoReply, replyTo, type StylistReply, type Weather } from "@/lib/stylist";
+import { WEATHER_OPTIONS, buildOutfits, describeOutfit, photoReply, replyTo, weatherLabel, type StylistReply, type Weather } from "@/lib/stylist";
 
 export const Route = createFileRoute("/stylist")({
   head: () => ({
     meta: [
-      { title: "AURA — AI Стилист" },
-      { name: "description", content: "Советы по стилю и образы из вашего гардероба" },
+      { title: "AURA — AI Stylist" },
+      { name: "description", content: "Style advice and outfits from your wardrobe" },
     ],
   }),
   component: StylistPage,
@@ -20,11 +22,14 @@ type Message = {
   id: number;
   role: "user" | "assistant";
   text: string;
+  textKey?: MessageKey;
   photo?: string;
   outfits?: { name: string; photos: (string | null)[] }[];
 };
 
 const CHAT_KEY = "aura:stylist-chat";
+
+const GREETING: Message = { id: 0, role: "assistant", text: "", textKey: "stylist.greeting" };
 
 function loadChat(): Message[] {
   try {
@@ -36,18 +41,14 @@ function loadChat(): Message[] {
   }
 }
 
-const QUICK_PROMPTS = ["Что надеть сегодня?", "Собрать образ из гардероба", "Совет по стилю"];
-const GREETING: Message = {
-  id: 0,
-  role: "assistant",
-  text: "Привет! Я AI-стилист AURA. Подберу образы из вашего гардероба с учётом погоды, цветов и стиля. Выберите погоду и напишите вопрос или нажмите подсказку.",
-};
+const QUICK_PROMPTS = ["stylist.quick.today", "stylist.quick.build", "stylist.quick.style"] as const;
 
 function StylistPage() {
+  const { t } = useI18n();
   const { data: items = [], isLoading, isError, refetch } = useQuery({ queryKey: ["items"], queryFn: fetchItems });
   const [messages, setMessages] = useState<Message[]>(loadChat);
   const [input, setInput] = useState("");
-  const [weather, setWeather] = useState<Weather>("Прохладно");
+  const [weather, setWeather] = useState<Weather>("cool");
   const [thinking, setThinking] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -66,9 +67,15 @@ function StylistPage() {
   const send = (text: string) => {
     const clean = text.trim();
     if ((!clean && !photo) || thinking) return;
-    const userMsg: Message = { id: nextId.current++, role: "user", text: clean || "Фото вещи", ...(photo ? { photo } : {}) };
-    const replies = clean ? [replyTo(clean, items, weather)] : [];
-    if (photo) replies.push(photoReply());
+    const userMsg: Message = {
+      id: nextId.current++,
+      role: "user",
+      text: clean || t("stylist.photoUserText"),
+      ...(photo ? { photo } : {}),
+    };
+    const replies: StylistReply[] = [];
+    if (clean) replies.push(replyTo(clean, items, weather, t));
+    if (photo) replies.push(photoReply(t));
     setMessages((m) => [...m, userMsg]);
     setInput("");
     setPhoto(null);
@@ -93,16 +100,16 @@ function StylistPage() {
   };
 
   return (
-    <AppShell title="AI Стилист">
+    <AppShell title={t("stylist.title")}>
       <div className="flex flex-col gap-4 pb-40">
         <div className="flex flex-wrap gap-2">
           {WEATHER_OPTIONS.map((w) => (
-            <Chip key={w} active={weather === w} onClick={() => setWeather(w)}>{w}</Chip>
+            <Chip key={w} active={weather === w} onClick={() => setWeather(w)}>{weatherLabel(w, t)}</Chip>
           ))}
         </div>
 
         {isLoading && <Spinner />}
-        {isError && <ErrorNote text="Не удалось загрузить гардероб" onRetry={() => refetch()} />}
+        {isError && <ErrorNote text={t("common.wardrobeError")} onRetry={() => refetch()} />}
 
         <div className="flex flex-col gap-3">
           {messages.map((m) => (
@@ -115,10 +122,10 @@ function StylistPage() {
                 }
               >
                 {m.photo && <img src={m.photo} alt="" className="mb-2 h-32 w-24 rounded-2xl object-cover" />}
-                <p>{m.text}</p>
+                <p>{m.textKey ? t(m.textKey) : m.text}</p>
                 {m.outfits?.map((o, idx) => (
                   <div key={idx} className="mt-3 rounded-2xl bg-white p-3">
-                    <p className="mb-2 text-xs font-medium text-[#1A1A1A]">Образ {idx + 1}</p>
+                    <p className="mb-2 text-xs font-medium text-[#1A1A1A]">{t("stylist.outfitLabel", { n: idx + 1 })}</p>
                     <div className="grid grid-cols-4 gap-2">
                       {o.photos.map((src, i) => (
                         <div key={i} className="aspect-[3/4] overflow-hidden rounded-xl bg-[#F8E8EE]">
@@ -134,26 +141,26 @@ function StylistPage() {
           ))}
           {thinking && (
             <div className="flex justify-start">
-              <div className="rounded-3xl rounded-bl-md bg-[#F8E8EE] px-4 py-3 text-sm text-[#1A1A1A]">Стилист думает…</div>
+              <div className="rounded-3xl rounded-bl-md bg-[#F8E8EE] px-4 py-3 text-sm text-[#1A1A1A]">{t("stylist.thinking")}</div>
             </div>
           )}
         </div>
 
         {!isLoading && items.length === 0 && (
-          <p className="text-center text-sm text-[#555]">В гардеробе пока нет вещей. Добавьте их, и стилист начнёт собирать образы.</p>
+          <p className="text-center text-sm text-[#555]">{t("stylist.emptyWardrobe")}</p>
         )}
       </div>
 
       <div className="fixed inset-x-0 bottom-20 z-30 mx-auto w-full max-w-md border-t border-[#F2D7E0] bg-white px-4 pb-3 pt-3">
         <div className="mb-2 flex gap-2 overflow-x-auto">
-          {QUICK_PROMPTS.map((p) => (
-            <Chip key={p} onClick={() => send(p)}>{p}</Chip>
+          {QUICK_PROMPTS.map((key) => (
+            <Chip key={key} onClick={() => send(t(key))}>{t(key)}</Chip>
           ))}
         </div>
         {photo && (
           <div className="mb-2 flex items-center gap-2">
             <img src={photo} alt="" className="h-12 w-10 rounded-lg object-cover" />
-            <button type="button" onClick={() => setPhoto(null)} className="rounded-full p-1 text-[#555] transition-colors hover:bg-[#F8E8EE]" aria-label="Убрать фото">
+            <button type="button" onClick={() => setPhoto(null)} className="rounded-full p-1 text-[#555] transition-colors hover:bg-[#F8E8EE]" aria-label={t("stylist.removePhoto")}>
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -163,7 +170,7 @@ function StylistPage() {
             type="button"
             onClick={() => fileRef.current?.click()}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#E8B4BC] text-[#1A1A1A] transition-colors duration-200 hover:bg-[#F8E8EE] active:scale-95"
-            aria-label="Загрузить фото вещи"
+            aria-label={t("stylist.attachPhoto")}
           >
             <ImagePlus className="h-5 w-5" />
           </button>
@@ -171,14 +178,14 @@ function StylistPage() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Спросите стилиста"
+            placeholder={t("stylist.placeholder")}
             className="h-11 min-w-0 flex-1 rounded-full border border-[#E8B4BC] bg-white px-4 text-sm outline-none focus:border-[#1A1A1A]"
           />
           <button
             type="submit"
             disabled={thinking || (!input.trim() && !photo)}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#1A1A1A] text-white transition-colors duration-200 hover:bg-[#333] active:scale-95 disabled:opacity-40"
-            aria-label="Отправить"
+            aria-label={t("stylist.send")}
           >
             <Send className="h-4 w-4" />
           </button>

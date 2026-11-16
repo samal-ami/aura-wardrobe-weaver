@@ -3,14 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Bookmark, Heart, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import look from "@/assets/look.jpg";
-import welcome from "@/assets/welcome.jpg";
-import jeans from "@/assets/item-jeans.jpg";
-import blazer from "@/assets/item-blazer.jpg";
-import tee from "@/assets/item-tee.jpg";
-import street from "@/assets/style-street.jpg";
-import business from "@/assets/style-business.jpg";
-import romantic from "@/assets/style-romantic.jpg";
+import { PHOTOS } from "@/lib/photos";
 
 export const Route = createFileRoute("/community")({
   head: () => ({
@@ -47,14 +40,14 @@ const EMPTY_STATE: CommunityState = { liked: [], saved: [], comments: {} };
 const MY_NAME = "Вы";
 
 const POSTS: Post[] = [
-  { id: "1", user: "Mina", avatar: "#E2B2B8", image: look, caption: "Минимализм на каждый день", style: "Минимализм", likes: 142 },
-  { id: "2", user: "Jisoo", avatar: "#2B2B2B", image: blazer, caption: "Оверсайз блейзер — база гардероба", style: "Business", likes: 89 },
-  { id: "3", user: "Yuna", avatar: "#5B7DA8", image: welcome, caption: "Чистые линии и нейтральные тона", style: "Минимализм", likes: 203 },
-  { id: "4", user: "Sora", avatar: "#8B5E3C", image: street, caption: "Street style осень 2026", style: "Street style", likes: 178 },
-  { id: "5", user: "Hana", avatar: "#E2F0D9", image: tee, caption: "Белый топ + прямые джинсы", style: "Casual", likes: 95 },
-  { id: "6", user: "Lee", avatar: "#D8C8B0", image: business, caption: "Деловой образ без усилий", style: "Business", likes: 156 },
-  { id: "7", user: "Ara", avatar: "#E2B2B8", image: romantic, caption: "Романтичный образ на выходные", style: "Romantic", likes: 211 },
-  { id: "8", user: "Kim", avatar: "#5B7DA8", image: jeans, caption: "Идеальные джинсы найдены", style: "Casual", likes: 67 },
+  { id: "1", user: "Mina", avatar: "#E2B2B8", image: PHOTOS.minimal, caption: "Минимализм на каждый день", style: "Минимализм", likes: 142 },
+  { id: "2", user: "Jisoo", avatar: "#2B2B2B", image: PHOTOS.blazer, caption: "Оверсайз блейзер — база гардероба", style: "Business", likes: 89 },
+  { id: "3", user: "Yuna", avatar: "#5B7DA8", image: PHOTOS.quietLuxury, caption: "Чистые линии и нейтральные тона", style: "Минимализм", likes: 203 },
+  { id: "4", user: "Sora", avatar: "#8B5E3C", image: PHOTOS.streetwear, caption: "Street style осень 2026", style: "Street style", likes: 178 },
+  { id: "5", user: "Hana", avatar: "#E2F0D9", image: PHOTOS.tee, caption: "Белый топ + прямые джинсы", style: "Casual", likes: 95 },
+  { id: "6", user: "Lee", avatar: "#D8C8B0", image: PHOTOS.oldMoney, caption: "Деловой образ без усилий", style: "Business", likes: 156 },
+  { id: "7", user: "Ara", avatar: "#E2B2B8", image: PHOTOS.coquette, caption: "Романтичный образ на выходные", style: "Romantic", likes: 211 },
+  { id: "8", user: "Kim", avatar: "#5B7DA8", image: PHOTOS.jeans, caption: "Идеальные джинсы найдены", style: "Casual", likes: 67 },
 ];
 
 function readState(): CommunityState {

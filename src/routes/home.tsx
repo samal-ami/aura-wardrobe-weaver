@@ -4,7 +4,7 @@ import { AppShell, Empty, ErrorNote, Spinner } from "@/components/AppShell";
 import { OutfitCard } from "@/components/OutfitCard";
 import { CapsuleSection } from "@/components/CapsuleSection";
 import { fetchOutfits, fetchProfile } from "@/lib/supabase";
-import look from "@/assets/look.jpg";
+import { PHOTOS } from "@/lib/photos";
 
 export const Route = createFileRoute("/home")({
   head: () => ({ meta: [{ title: "AURA — Лента" }, { name: "description", content: "Вдохновение и ваши образы" }, { property: "og:title", content: "AURA — Лента" }, { property: "og:description", content: "Вдохновение и ваши образы" }] }),
@@ -18,7 +18,7 @@ function Home() {
     <AppShell title="AURA">
       <p className="-mt-2 mb-5 text-muted-foreground">Привет, {profile.data?.display_name ?? "…"}</p>
       <section className="relative overflow-hidden rounded-[20px] shadow-card">
-        <img src={look} alt="Вдохновение недели" className="aspect-[4/3] w-full object-cover" />
+        <img src={PHOTOS.minimal} alt="Вдохновение недели" className="aspect-[4/3] w-full object-cover" />
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-foreground/60 to-transparent p-6">
           <p className="text-xs uppercase tracking-widest text-background">Вдохновение недели</p>
           <h2 className="mt-1 font-serif text-3xl leading-tight text-background">Твой стиль. Твоя история</h2>

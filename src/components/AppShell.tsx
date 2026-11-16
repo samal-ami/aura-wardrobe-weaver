@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Home, Shirt, Plus, Sparkles, ChevronLeft, Loader2, Users, UserRound } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 import { useSession, fetchProfile } from "@/lib/supabase";
+import { useI18n } from "@/lib/i18n";
 
 /** Client-side guard: inner screens need a real session, otherwise go to /auth. */
 function AuthGate({ children }: { children: ReactNode }) {
@@ -23,10 +24,11 @@ export function Spinner({ label }: { label?: string }) {
 }
 
 export function ErrorNote({ text, onRetry }: { text: string; onRetry?: () => void }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-[20px] bg-card p-5 text-center shadow-card">
       <p className="text-sm text-destructive">{text}</p>
-      {onRetry && <button type="button" onClick={onRetry} className="mt-3 text-sm font-semibold underline">Повторить</button>}
+      {onRetry && <button type="button" onClick={onRetry} className="mt-3 text-sm font-semibold underline">{t("common.retry")}</button>}
     </div>
   );
 }
@@ -43,12 +45,13 @@ export function Empty({ title, text, action }: { title: string; text: string; ac
 
 export function AppShell({ title, children, right, back }: { title?: string; children: ReactNode; right?: ReactNode; back?: boolean }) {
   const router = useRouter();
+  const { t } = useI18n();
   const avatar = <HeaderAvatar />;
   return (
     <div className="mx-auto min-h-screen max-w-md bg-background pb-28">
       {back ? (
         <header className="sticky top-0 z-40 grid grid-cols-[40px_1fr_auto] items-center bg-background px-4 pt-6 pb-4">
-          <button type="button" aria-label="Назад" onClick={() => (window.history.length > 1 ? router.history.back() : router.navigate({ to: "/home" }))} className="flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-card text-foreground">
+          <button type="button" aria-label={t("common.back")} onClick={() => (window.history.length > 1 ? router.history.back() : router.navigate({ to: "/home" }))} className="flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-card text-foreground">
             <ChevronLeft size={22} />
           </button>
           <h1 className="text-center font-serif text-2xl text-foreground">{title}</h1>
@@ -68,26 +71,28 @@ export function AppShell({ title, children, right, back }: { title?: string; chi
 
 function HeaderAvatar() {
   const { data: profile } = useQuery({ queryKey: ["profile"], queryFn: fetchProfile });
+  const { t } = useI18n();
   return (
-    <Link to="/profile" aria-label="Профиль" className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-card shadow-card">
-      {profile?.avatar ? <img src={profile.avatar} alt={profile.display_name ?? "Профиль"} className="h-full w-full object-cover" /> : <UserRound size={20} className="text-muted-foreground" />}
+    <Link to="/profile" aria-label={t("nav.profile")} className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-card shadow-card">
+      {profile?.avatar ? <img src={profile.avatar} alt={profile.display_name ?? t("nav.profile")} className="h-full w-full object-cover" /> : <UserRound size={20} className="text-muted-foreground" />}
     </Link>
   );
 }
 
 function BottomNav() {
+  const { t } = useI18n();
   const baseItem = "flex flex-col items-center gap-1 rounded-2xl px-3 py-1.5 text-[11px] text-muted-foreground transition-colors duration-200 active:scale-95";
   const activeItem = "bg-[#1A1A1A] font-medium text-white";
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-card px-4 pt-2 pb-5">
       <div className="flex items-end justify-between">
-        <Link to="/home" className={baseItem} activeProps={{ className: activeItem }}><Home size={22} />Главная</Link>
-        <Link to="/wardrobe" className={baseItem} activeProps={{ className: activeItem }}><Shirt size={22} />Гардероб</Link>
-        <Link to="/add" aria-label="Добавить" className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-soft transition active:scale-95">
+        <Link to="/home" className={baseItem} activeProps={{ className: activeItem }}><Home size={22} />{t("nav.home")}</Link>
+        <Link to="/wardrobe" className={baseItem} activeProps={{ className: activeItem }}><Shirt size={22} />{t("nav.wardrobe")}</Link>
+        <Link to="/add" aria-label={t("nav.add")} className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-soft transition active:scale-95">
           <Plus size={26} />
         </Link>
-        <Link to="/outfits" className={baseItem} activeProps={{ className: activeItem }}><Sparkles size={22} />Образы</Link>
-        <Link to="/community" className={baseItem} activeProps={{ className: activeItem }}><Users size={22} />Сообщество</Link>
+        <Link to="/outfits" className={baseItem} activeProps={{ className: activeItem }}><Sparkles size={22} />{t("nav.outfits")}</Link>
+        <Link to="/community" className={baseItem} activeProps={{ className: activeItem }}><Users size={22} />{t("nav.community")}</Link>
       </div>
     </nav>
   );

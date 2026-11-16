@@ -1,25 +1,25 @@
 import { colorDistance, colorsCompatible, isNeutral } from "@/lib/color";
 import type { ClothingItem } from "@/lib/supabase";
+import type { MessageKey } from "@/lib/i18n/ru";
 
 export const SHOP_CATEGORIES = ["Верх", "Низ", "Платья", "Обувь", "Аксессуары"] as const;
 
 export type ShoppingCandidate = {
-  name: string;
-  category: string;
   color_hex: string;
+  category: string;
   price: number | null;
 };
 
 export type ShoppingVerdict = "buy" | "consider" | "skip";
+
+export type ShoppingReason = { key: MessageKey; vars?: Record<string, string | number> };
 
 export type ShoppingResult = {
   score: number;
   verdict: ShoppingVerdict;
   outfitCount: number;
   matches: ClothingItem[];
-  duplicates: ClothingItem[];
-  costPerOutfit: number | null;
-  reasons: string[];
+  reasons: ShoppingReason[];
 };
 
 const PAIRING_CATEGORIES: Record<string, string[]> = {
@@ -54,24 +54,17 @@ export function analyzePurchase(candidate: ShoppingCandidate, items: ClothingIte
   score = Math.max(0, Math.min(100, score));
 
   const verdict: ShoppingVerdict = score >= 65 && outfitCount >= 3 ? "buy" : score >= 40 ? "consider" : "skip";
-  const costPerOutfit = candidate.price !== null && outfitCount > 0 ? Math.round(candidate.price / outfitCount) : null;
 
-  const reasons: string[] = [];
-  if (isNeutral(candidateColor)) reasons.push("Нейтральный цвет: вещь сочетается с большинством других.");
-  else reasons.push("Яркий цвет: сочетается не со всем, зато задаёт характер образа.");
-  reasons.push(`Подходит к ${matches.length} из ${partners.length} вещей из категорий, с которыми её обычно носят.`);
-  reasons.push(`Можно собрать примерно ${outfitCount} ${outfitCount === 1 ? "образ" : outfitCount < 5 ? "образа" : "образов"} из вашего гардероба.`);
+  const reasons: ShoppingReason[] = [
+    { key: isNeutral(candidateColor) ? "shop.reason.neutral" : "shop.reason.accent" },
+    { key: "shop.reason.matches", vars: { matches: matches.length, total: partners.length } },
+    { key: "shop.reason.outfits", vars: { count: outfitCount } },
+  ];
   const firstDuplicate = duplicates[0];
-  if (firstDuplicate) {
-    reasons.push(`Похожая вещь уже есть: «${firstDuplicate.name}». Возможно, покупка дублирует гардероб.`);
+  if (firstDuplicate) reasons.push({ key: "shop.reason.duplicate", vars: { name: firstDuplicate.name } });
+  if (candidate.price !== null && outfitCount > 0) {
+    reasons.push({ key: "shop.reason.perOutfit", vars: { price: Math.round(candidate.price / outfitCount).toLocaleString("ru-RU") } });
   }
-  if (costPerOutfit !== null) reasons.push(`Цена за один образ: около ${costPerOutfit.toLocaleString("ru-RU")} ₽.`);
 
-  return { score, verdict, outfitCount, matches, duplicates, costPerOutfit, reasons };
+  return { score, verdict, outfitCount, matches, reasons };
 }
-
-export const VERDICT_LABEL: Record<ShoppingVerdict, string> = {
-  buy: "Стоит купить",
-  consider: "Подумайте",
-  skip: "Лучше пропустить",
-};

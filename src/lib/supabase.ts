@@ -1,17 +1,7 @@
 import { createClient, type Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
-import itemBlazer from "@/assets/item-blazer.jpg";
-import itemJeans from "@/assets/item-jeans.jpg";
-import itemBag from "@/assets/item-bag.jpg";
-import itemTee from "@/assets/item-tee.jpg";
+import { PHOTOS } from "@/lib/photos";
 
-const shirtPhoto = "https://images.pexels.com/photos/6276012/pexels-photo-6276012.jpeg?auto=compress&cs=tinysrgb&h=650&w=940";
-const trenchPhoto = "https://images.pexels.com/photos/4456724/pexels-photo-4456724.jpeg?auto=compress&cs=tinysrgb&h=650&w=940";
-const loafersPhoto = "https://images.pexels.com/photos/14706989/pexels-photo-14706989.jpeg?auto=compress&cs=tinysrgb&h=650&w=940";
-const sneakersPhoto = "https://images.pexels.com/photos/7193629/pexels-photo-7193629.jpeg?auto=compress&cs=tinysrgb&h=650&w=940";
-const slingbackPhoto = "https://images.pexels.com/photos/31451000/pexels-photo-31451000.jpeg?auto=compress&cs=tinysrgb&h=650&w=940";
-const cardiganPhoto = "https://images.pexels.com/photos/10174127/pexels-photo-10174127.jpeg?auto=compress&cs=tinysrgb&h=650&w=940";
-const silkBlousePhoto = "https://images.pexels.com/photos/18504977/pexels-photo-18504977.jpeg?auto=compress&cs=tinysrgb&h=650&w=940";
 
 const URL = "https://kjkfqovwsppbgahzgkgx.supabase.co";
 const KEY = "sb_publishable__dGeuURiWQfd-SYDSljwPw_AIpAT3z9";
@@ -189,18 +179,18 @@ function setLocalItems(items: ClothingItem[]) {
 }
 
 const DEMO_ITEMS: ClothingItem[] = [
-  { id: "demo-1", name: "Блейзер оверсайз", category: "Верх", brand: "COS", color_hex: "#2B2B2B", season: "Всесезон", image_url: itemBlazer, image_path: null, photo: itemBlazer },
-  { id: "demo-2", name: "Белая рубашка", category: "Верх", brand: "Uniqlo", color_hex: "#FFFFFF", season: "Всесезон", image_url: shirtPhoto, image_path: null, photo: shirtPhoto },
-  { id: "demo-3", name: "Бежевый тренч", category: "Верх", brand: "Zara", color_hex: "#D8C8B0", season: "Весна", image_url: trenchPhoto, image_path: null, photo: trenchPhoto },
-  { id: "demo-4", name: "Прямые джинсы", category: "Низ", brand: "Levi's", color_hex: "#5B7DA8", season: "Всесезон", image_url: itemJeans, image_path: null, photo: itemJeans },
-  { id: "demo-5", name: "Лоферы", category: "Обувь", brand: "Massimo Dutti", color_hex: "#8B5E3C", season: "Всесезон", image_url: loafersPhoto, image_path: null, photo: loafersPhoto },
-  { id: "demo-6", name: "Структурированная сумка", category: "Аксессуары", brand: "A.P.C.", color_hex: "#8B5E3C", season: "Всесезон", image_url: itemBag, image_path: null, photo: itemBag },
-  { id: "demo-7", name: "Белый топ", category: "Верх", brand: "COS", color_hex: "#FFFFFF", season: "Лето", image_url: itemTee, image_path: null, photo: itemTee },
-  { id: "demo-8", name: "Мини-сумка", category: "Аксессуары", brand: "Polène", color_hex: "#2B2B2B", season: "Всесезон", image_url: itemBag, image_path: null, photo: itemBag },
-  { id: "demo-9", name: "Белые кроссовки", category: "Обувь", brand: "New Balance", color_hex: "#F5F5F0", season: "Всесезон", image_url: sneakersPhoto, image_path: null, photo: sneakersPhoto },
-  { id: "demo-10", name: "Туфли-лодочки", category: "Обувь", brand: "Mango", color_hex: "#1A1A1A", season: "Весна", image_url: slingbackPhoto, image_path: null, photo: slingbackPhoto },
-  { id: "demo-11", name: "Бежевый кардиган", category: "Верх", brand: "Uniqlo", color_hex: "#D8C8B0", season: "Осень", image_url: cardiganPhoto, image_path: null, photo: cardiganPhoto },
-  { id: "demo-12", name: "Шелковая блуза", category: "Верх", brand: "Massimo Dutti", color_hex: "#F8F4EE", season: "Лето", image_url: silkBlousePhoto, image_path: null, photo: silkBlousePhoto },
+  { id: "demo-1", name: "Блейзер оверсайз", category: "Верх", brand: "COS", color_hex: "#2B2B2B", season: "Всесезон", image_url: PHOTOS.blazer, image_path: null, photo: PHOTOS.blazer },
+  { id: "demo-2", name: "Белая рубашка", category: "Верх", brand: "Uniqlo", color_hex: "#FFFFFF", season: "Всесезон", image_url: PHOTOS.shirt, image_path: null, photo: PHOTOS.shirt },
+  { id: "demo-3", name: "Бежевый тренч", category: "Верх", brand: "Zara", color_hex: "#D8C8B0", season: "Весна", image_url: PHOTOS.trench, image_path: null, photo: PHOTOS.trench },
+  { id: "demo-4", name: "Прямые джинсы", category: "Низ", brand: "Levi's", color_hex: "#5B7DA8", season: "Всесезон", image_url: PHOTOS.jeans, image_path: null, photo: PHOTOS.jeans },
+  { id: "demo-5", name: "Лоферы", category: "Обувь", brand: "Massimo Dutti", color_hex: "#8B5E3C", season: "Всесезон", image_url: PHOTOS.loafers, image_path: null, photo: PHOTOS.loafers },
+  { id: "demo-6", name: "Структурированная сумка", category: "Аксессуары", brand: "A.P.C.", color_hex: "#8B5E3C", season: "Всесезон", image_url: PHOTOS.bag, image_path: null, photo: PHOTOS.bag },
+  { id: "demo-7", name: "Белый топ", category: "Верх", brand: "COS", color_hex: "#FFFFFF", season: "Лето", image_url: PHOTOS.tee, image_path: null, photo: PHOTOS.tee },
+  { id: "demo-8", name: "Мини-сумка", category: "Аксессуары", brand: "Polène", color_hex: "#2B2B2B", season: "Всесезон", image_url: PHOTOS.miniBag, image_path: null, photo: PHOTOS.miniBag },
+  { id: "demo-9", name: "Белые кроссовки", category: "Обувь", brand: "New Balance", color_hex: "#F5F5F0", season: "Всесезон", image_url: PHOTOS.sneakers, image_path: null, photo: PHOTOS.sneakers },
+  { id: "demo-10", name: "Туфли-лодочки", category: "Обувь", brand: "Mango", color_hex: "#1A1A1A", season: "Весна", image_url: PHOTOS.slingbacks, image_path: null, photo: PHOTOS.slingbacks },
+  { id: "demo-11", name: "Бежевый кардиган", category: "Верх", brand: "Uniqlo", color_hex: "#D8C8B0", season: "Осень", image_url: PHOTOS.cardigan, image_path: null, photo: PHOTOS.cardigan },
+  { id: "demo-12", name: "Шелковая блуза", category: "Верх", brand: "Massimo Dutti", color_hex: "#F8F4EE", season: "Лето", image_url: PHOTOS.silkTop, image_path: null, photo: PHOTOS.silkTop },
 ];
 
 function ensureDemoItems(): ClothingItem[] {

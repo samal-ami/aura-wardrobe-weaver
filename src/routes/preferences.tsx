@@ -3,12 +3,7 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import look from "@/assets/look.jpg";
-import welcome from "@/assets/welcome.jpg";
-import jeans from "@/assets/item-jeans.jpg";
-import romantic from "@/assets/style-romantic.jpg";
-import street from "@/assets/style-street.jpg";
-import business from "@/assets/style-business.jpg";
+import { PHOTOS } from "@/lib/photos";
 
 export const Route = createFileRoute("/preferences")({
   head: () => ({ meta: [{ title: "AURA — Мои предпочтения" }, { name: "description", content: "Любимые стили, цвета и критерии" }, { property: "og:title", content: "AURA — Мои предпочтения" }, { property: "og:description", content: "Любимые стили, цвета и критерии" }] }),
@@ -16,8 +11,8 @@ export const Route = createFileRoute("/preferences")({
 });
 
 const STYLES = [
-  { n: "Классика", img: look }, { n: "Минимализм", img: welcome }, { n: "Casual", img: jeans },
-  { n: "Romantic", img: romantic }, { n: "Street style", img: street }, { n: "Business", img: business },
+  { n: "Классика", img: PHOTOS.minimal }, { n: "Минимализм", img: PHOTOS.quietLuxury }, { n: "Casual", img: PHOTOS.jeans },
+  { n: "Romantic", img: PHOTOS.coquette }, { n: "Street style", img: PHOTOS.streetwear }, { n: "Business", img: PHOTOS.oldMoney },
 ];
 const PALETTE = ["#F8F5F0", "#D8C8B0", "#E2B2B8", "#E2F0D9", "#2B2B2B", "#5B7DA8", "#8B5E3C", "#FFFFFF"];
 const CRIT = ["Комфорт", "Качество", "Универсальность", "Тренды", "Эстетика"];
