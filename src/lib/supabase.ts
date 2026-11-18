@@ -312,15 +312,28 @@ export async function deleteOutfit(id: string) {
 }
 
 // ---------- favorites ----------
+const FAV_KEY = "aura:favorites";
+function getLocalFavs(): string[] {
+  if (typeof window === "undefined") return [];
+  return JSON.parse(localStorage.getItem(FAV_KEY) ?? "[]") as string[];
+}
+function setLocalFavs(ids: string[]) {
+  if (typeof window !== "undefined") localStorage.setItem(FAV_KEY, JSON.stringify(ids));
+}
+
 export async function fetchFavoriteIds(type: "outfit" | "item"): Promise<string[]> {
-  if (isDemo()) return [];
+  if (isDemo()) return getLocalFavs();
   await requireUserId();
   const data = check(await supabase.from("favorites").select("target_id").eq("target_type", type)) as { target_id: string }[];
   return data.map((d) => d.target_id);
 }
 
 export async function setFavorite(type: "outfit" | "item", id: string, on: boolean) {
-  if (isDemo()) return;
+  if (isDemo()) {
+    const cur = getLocalFavs();
+    setLocalFavs(on ? [...cur, id] : cur.filter((x) => x !== id));
+    return;
+  }
   const user_id = await requireUserId();
   if (on) check(await supabase.from("favorites").upsert({ user_id, target_type: type, target_id: id }, { onConflict: "user_id,target_type,target_id", ignoreDuplicates: true }));
   else check(await supabase.from("favorites").delete().eq("target_type", type).eq("target_id", id));
@@ -371,7 +384,7 @@ export async function fetchStats() {
   if (isDemo()) {
     const items = ensureDemoItems();
     const outfits = getLocalOutfits();
-    return { items: items.length, outfits: outfits.length, favorites: 0 };
+    return { items: items.length, outfits: outfits.length, favorites: getLocalFavs().length };
   }
   await requireUserId();
   const count = async (t: string, f?: [string, string]) => {
@@ -385,15 +398,23 @@ export async function fetchStats() {
   return { items, outfits, favorites };
 }
 
+const PREFS_KEY = "aura:preferences";
 const DEFAULT_PREFS: Preferences = { favorite_styles: [], favorite_colors: [], priorities: [] };
 export async function fetchPreferences(): Promise<Preferences> {
-  if (isDemo()) return DEFAULT_PREFS;
+  if (isDemo()) {
+    if (typeof window === "undefined") return DEFAULT_PREFS;
+    const raw = localStorage.getItem(PREFS_KEY);
+    return raw ? { ...DEFAULT_PREFS, ...(JSON.parse(raw) as Preferences) } : DEFAULT_PREFS;
+  }
   await requireUserId();
   const d = check(await supabase.from("user_preferences").select("favorite_styles,favorite_colors,priorities").maybeSingle()) as Preferences | null;
   return { ...DEFAULT_PREFS, ...(d ?? {}) };
 }
 export async function savePreferences(p: Preferences) {
-  if (isDemo()) return;
+  if (isDemo()) {
+    if (typeof window !== "undefined") localStorage.setItem(PREFS_KEY, JSON.stringify(p));
+    return;
+  }
   const user_id = await requireUserId();
   check(await supabase.from("user_preferences").upsert({ user_id, ...p, updated_at: new Date().toISOString() }));
 }
